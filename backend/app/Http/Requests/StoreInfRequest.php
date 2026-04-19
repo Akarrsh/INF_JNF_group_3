@@ -29,7 +29,7 @@ class StoreInfRequest extends FormRequest
             'internship_duration_weeks' => ['nullable', 'integer', 'min:1'],
             'vacancies' => ['nullable', 'integer', 'min:1'],
             'application_deadline' => ['nullable', 'date'],
-            'status' => ['nullable', 'in:draft,submitted,under_review,accepted,rejected'],
+            'status' => ['nullable', 'in:draft,submitted,under_review,accepted,rejected,edit_requested'],
             'admin_remarks' => ['nullable', 'string', 'max:2000'],
         ];
     }

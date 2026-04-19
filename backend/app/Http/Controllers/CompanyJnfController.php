@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreJnfRequest;
+use App\Mail\FormEditRequestedMail;
 use App\Mail\FormSubmittedMail;
 use App\Models\EmailLog;
 use App\Models\FormStatusHistory;
@@ -15,6 +16,22 @@ use Illuminate\Support\Facades\Mail;
 
 class CompanyJnfController extends Controller
 {
+    /** Statuses where the company is never allowed to directly edit. */
+    private const LOCKED_STATUSES = ['submitted', 'under_review', 'accepted', 'rejected', 'edit_requested'];
+
+    /** Whether a JNF is directly editable by the company right now. */
+    private function isDirectlyEditable(Jnf $jnf): bool
+    {
+        if ($jnf->status === 'draft') {
+            return true; // Always editable in draft
+        }
+        // After submission: allowed ONE time (has_edited_once = false means unused)
+        if ($jnf->status === 'submitted' && ! $jnf->has_edited_once) {
+            return true;
+        }
+        return false;
+    }
+
     public function index(Request $request): JsonResponse
     {
         $company = $request->user()?->company;
@@ -39,6 +56,7 @@ class CompanyJnfController extends Controller
         return response()->json([
             'jnf' => $jnf,
             'status_history' => $jnf->statusHistories()->latest()->get(),
+            'can_edit' => $this->isDirectlyEditable($jnf),
         ]);
     }
 
@@ -85,9 +103,25 @@ class CompanyJnfController extends Controller
             return response()->json(['message' => 'JNF not found.'], 404);
         }
 
+        // --- Backend enforcement of edit control ---
+        if (! $this->isDirectlyEditable($jnf)) {
+            return response()->json([
+                'message' => 'This JNF cannot be edited directly. Please use the "Request to Edit" option.',
+            ], 403);
+        }
+
         $oldStatus = $jnf->status;
         $newStatus = $request->input('status', $oldStatus);
-        $jnf->update(array_merge($request->validated(), ['status' => $newStatus]));
+
+        // If editing a submitted form for the first time, mark the flag and keep it submitted
+        $wasSubmitted = $oldStatus === 'submitted';
+        $extraFields = [];
+        if ($wasSubmitted && ! $jnf->has_edited_once) {
+            $extraFields['has_edited_once'] = true;
+            // After using the one-time edit, status stays submitted (or transitions to whatever the form says)
+        }
+
+        $jnf->update(array_merge($request->validated(), ['status' => $newStatus], $extraFields));
 
         if ($oldStatus !== $newStatus) {
             FormStatusHistory::create([
@@ -96,7 +130,7 @@ class CompanyJnfController extends Controller
                 'old_status' => $oldStatus,
                 'new_status' => $newStatus,
                 'changed_by' => $request->user()?->id,
-                'remarks' => 'Status updated.',
+                'remarks' => $wasSubmitted ? 'One-time post-submission edit used.' : 'Status updated.',
             ]);
         }
 
@@ -147,7 +181,6 @@ class CompanyJnfController extends Controller
         $id = $validated['id'] ?? null;
         unset($validated['id']);
 
-        // Parse form_data if it's a JSON string
         if (isset($validated['form_data']) && is_string($validated['form_data'])) {
             $validated['form_data'] = json_decode($validated['form_data'], true);
         }
@@ -159,10 +192,22 @@ class CompanyJnfController extends Controller
                 return response()->json(['message' => 'JNF not found.'], 404);
             }
 
-            $jnf->update(array_merge($validated, ['status' => 'draft']));
+            // Block autosave if the form is not directly editable
+            if (! $this->isDirectlyEditable($jnf)) {
+                return response()->json(['message' => 'Cannot autosave a locked JNF.'], 403);
+            }
+
+            // For submitted forms: flip has_edited_once on first autosave so the
+            // one-time edit slot is consumed immediately when they start typing.
+            $extraFields = [];
+            if ($jnf->status === 'submitted' && ! $jnf->has_edited_once) {
+                $extraFields['has_edited_once'] = true;
+            }
+
+            $jnf->update(array_merge($validated, ['status' => $jnf->status], $extraFields));
 
             return response()->json([
-                'message' => 'JNF draft auto-saved.',
+                'message' => 'JNF auto-saved.',
                 'jnf' => $jnf->fresh(),
             ]);
         }
@@ -195,7 +240,6 @@ class CompanyJnfController extends Controller
             return response()->json(['message' => 'JNF not found.'], 404);
         }
 
-        // Create a copy with "Copy of" prefix
         $newJnf = Jnf::create([
             'company_id' => $company->id,
             'job_title' => 'Copy of ' . $jnf->job_title,
@@ -207,6 +251,7 @@ class CompanyJnfController extends Controller
             'application_deadline' => $jnf->application_deadline,
             'form_data' => $jnf->form_data,
             'status' => 'draft',
+            'has_edited_once' => false,
         ]);
 
         FormStatusHistory::create([
@@ -223,6 +268,75 @@ class CompanyJnfController extends Controller
             'id' => $newJnf->id,
             'jnf' => $newJnf,
         ], 201);
+    }
+
+    public function requestEdit(Request $request, Jnf $jnf): JsonResponse
+    {
+        $company = $request->user()?->company;
+
+        if (! $company || $jnf->company_id !== $company->id) {
+            return response()->json(['message' => 'JNF not found.'], 404);
+        }
+
+        // Already editable — no need to request
+        if ($this->isDirectlyEditable($jnf)) {
+            return response()->json(['message' => 'Form is already directly editable.'], 400);
+        }
+
+        // Already requested — don't double-request
+        if ($jnf->status === 'edit_requested') {
+            return response()->json(['message' => 'Edit request already pending.'], 400);
+        }
+
+        $validated = $request->validate([
+            'reason' => ['required', 'string', 'max:1000'],
+            'comments' => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        $oldStatus = $jnf->status;
+        $jnf->update(['status' => 'edit_requested']);
+
+        $remarks = 'Reason: ' . $validated['reason'];
+        if (! empty($validated['comments'])) {
+            $remarks .= ' | Comments: ' . $validated['comments'];
+        }
+
+        FormStatusHistory::create([
+            'form_type' => Jnf::class,
+            'form_id' => $jnf->id,
+            'old_status' => $oldStatus,
+            'new_status' => 'edit_requested',
+            'changed_by' => $request->user()?->id,
+            'remarks' => $remarks,
+        ]);
+
+        $admins = User::where('role', 'admin')->get();
+        foreach ($admins as $admin) {
+            try {
+                Mail::to($admin->email)->send(new FormEditRequestedMail(
+                    'JNF',
+                    $jnf->job_title,
+                    $company->name,
+                    $request->user()->name
+                ));
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error('FormEditRequestedMail failed', [
+                    'to' => $admin->email,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+            PortalNotification::create([
+                'user_id' => $admin->id,
+                'title' => 'Edit Requested for JNF',
+                'message' => sprintf('%s requested to edit JNF: %s. Reason: %s', $company->name, $jnf->job_title, $validated['reason']),
+                'type' => 'warning',
+            ]);
+        }
+
+        return response()->json([
+            'message' => 'Edit request submitted successfully. The CDC admin will review your request.',
+            'jnf' => $jnf->fresh(),
+        ]);
     }
 
     private function sendSubmissionEmailAndNotify(Request $request, Jnf $jnf): void

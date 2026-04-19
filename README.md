@@ -12,6 +12,7 @@ A comprehensive, state-of-the-art placement portal enabling companies to securel
 - **Dynamic Form Builders**: Massive, multi-step JNF (Job Notification Forms) and INF (Internship Notification Forms) built with interactive UI patterns.
 - **Auto-Saving Drafts**: Forms save automatically in the background as the recruiter types, ensuring no data loss during long completion sessions.
 - **Form Tracking**: Track submission status (Pending, Under Review, Accepted, Rejected) in real-time.
+- **Strict Edit Governance**: Implementing a one-time edit restriction post-submission with a formal "Request to Edit" workflow to prevent unauthorized continuous modifications.
 - **Email Notifications**: Instant confirmation emails upon successful form submission and when admins change form statuses.
 
 ### 🛡️ Admin Portal
@@ -147,7 +148,14 @@ When an Admin edits a form:
 4. If it detects a mismatch, it extracts the exact path, transforming `"programme.B.Tech.branches.0.selected"` into highly readable English: `"Eligibility > B.Tech > Branches > CSE > Selected"`.
 5. Only these precise changes are bundled into the `FormEditedByAdminMail` and dispatched via the `database` queue worker to the company recruiter.
 
-### 5. Backend Controllers & Route Prefixes
+### 5. Edit Governance & Request to Edit
+To prevent companies from bypassing reviews with continuous stealth edits, the system operates on a **One-Time Edit Paradigm**:
+1. **Unrestricted Drafts**: Forms in `draft` state can be edited infinitely.
+2. **One-Time Access**: Once a form transitions to `submitted`, it is flagged with `has_edited_once=false`. The next time the user saves or autosaves, the database consumes this privilege (`has_edited_once=true`) and immediately locks the form out of direct edit access (`403 Forbidden`).
+3. **Request to Edit**: Locked forms require the company to click **"Request to Edit"**. This dispatches a formal request via the `POST /api/company/(jnfs|infs)/{id}/request-edit` endpoint, requiring a mandatory reason.
+4. **Notifications**: The CDC Admin receives a warning notification in their dashboard and a detailed email highlighting the company's reason for the request, allowing manual un-locking if appropriate.
+
+### 6. Backend Controllers & Route Prefixes
 `routes/api.php` enforces the domains:
 - `Route::prefix('company')` -> Resolved by `CompanyAuthController`, `CompanyInfController`, `CompanyJnfController`.
 - `Route::prefix('admin')` -> Resolved by `AdminCompanyController`, `AdminFormReviewController`, `AdminDashboardController`.

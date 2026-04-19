@@ -26,6 +26,7 @@ class Jnf extends Model
         'vacancies',
         'application_deadline',
         'status',
+        'has_edited_once',
         'admin_remarks',
         'form_data',
     ];
@@ -43,6 +44,7 @@ class Jnf extends Model
             'ctc_max' => 'integer',
             'vacancies' => 'integer',
             'form_data' => 'array',
+            'has_edited_once' => 'boolean',
         ];
     }
 

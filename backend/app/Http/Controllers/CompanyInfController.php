@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreInfRequest;
+use App\Mail\FormEditRequestedMail;
 use App\Mail\FormSubmittedMail;
 use App\Models\EmailLog;
 use App\Models\FormStatusHistory;
@@ -15,6 +16,22 @@ use Illuminate\Support\Facades\Mail;
 
 class CompanyInfController extends Controller
 {
+    /** Statuses where the company is never allowed to directly edit. */
+    private const LOCKED_STATUSES = ['submitted', 'under_review', 'accepted', 'rejected', 'edit_requested'];
+
+    /** Whether an INF is directly editable by the company right now. */
+    private function isDirectlyEditable(Inf $inf): bool
+    {
+        if ($inf->status === 'draft') {
+            return true; // Always editable in draft
+        }
+        // After submission: allowed ONE time (has_edited_once = false means unused)
+        if ($inf->status === 'submitted' && ! $inf->has_edited_once) {
+            return true;
+        }
+        return false;
+    }
+
     public function index(Request $request): JsonResponse
     {
         $company = $request->user()?->company;
@@ -39,6 +56,7 @@ class CompanyInfController extends Controller
         return response()->json([
             'inf' => $inf,
             'status_history' => $inf->statusHistories()->latest()->get(),
+            'can_edit' => $this->isDirectlyEditable($inf),
         ]);
     }
 
@@ -85,9 +103,24 @@ class CompanyInfController extends Controller
             return response()->json(['message' => 'INF not found.'], 404);
         }
 
+        // --- Backend enforcement of edit control ---
+        if (! $this->isDirectlyEditable($inf)) {
+            return response()->json([
+                'message' => 'This INF cannot be edited directly. Please use the "Request to Edit" option.',
+            ], 403);
+        }
+
         $oldStatus = $inf->status;
         $newStatus = $request->input('status', $oldStatus);
-        $inf->update(array_merge($request->validated(), ['status' => $newStatus]));
+
+        // If editing a submitted form for the first time, mark the flag
+        $wasSubmitted = $oldStatus === 'submitted';
+        $extraFields = [];
+        if ($wasSubmitted && ! $inf->has_edited_once) {
+            $extraFields['has_edited_once'] = true;
+        }
+
+        $inf->update(array_merge($request->validated(), ['status' => $newStatus], $extraFields));
 
         if ($oldStatus !== $newStatus) {
             FormStatusHistory::create([
@@ -96,7 +129,7 @@ class CompanyInfController extends Controller
                 'old_status' => $oldStatus,
                 'new_status' => $newStatus,
                 'changed_by' => $request->user()?->id,
-                'remarks' => 'Status updated.',
+                'remarks' => $wasSubmitted ? 'One-time post-submission edit used.' : 'Status updated.',
             ]);
         }
 
@@ -147,7 +180,6 @@ class CompanyInfController extends Controller
         $id = $validated['id'] ?? null;
         unset($validated['id']);
 
-        // Parse form_data if it's a JSON string
         if (isset($validated['form_data']) && is_string($validated['form_data'])) {
             $validated['form_data'] = json_decode($validated['form_data'], true);
         }
@@ -159,10 +191,22 @@ class CompanyInfController extends Controller
                 return response()->json(['message' => 'INF not found.'], 404);
             }
 
-            $inf->update(array_merge($validated, ['status' => 'draft']));
+            // Block autosave if the form is not directly editable
+            if (! $this->isDirectlyEditable($inf)) {
+                return response()->json(['message' => 'Cannot autosave a locked INF.'], 403);
+            }
+
+            // For submitted forms: flip has_edited_once on first autosave so the
+            // one-time edit slot is consumed immediately when they start typing.
+            $extraFields = [];
+            if ($inf->status === 'submitted' && ! $inf->has_edited_once) {
+                $extraFields['has_edited_once'] = true;
+            }
+
+            $inf->update(array_merge($validated, ['status' => $inf->status], $extraFields));
 
             return response()->json([
-                'message' => 'INF draft auto-saved.',
+                'message' => 'INF auto-saved.',
                 'inf' => $inf->fresh(),
             ]);
         }
@@ -195,7 +239,6 @@ class CompanyInfController extends Controller
             return response()->json(['message' => 'INF not found.'], 404);
         }
 
-        // Create a copy with "Copy of" prefix
         $newInf = Inf::create([
             'company_id' => $company->id,
             'internship_title' => 'Copy of ' . $inf->internship_title,
@@ -207,6 +250,7 @@ class CompanyInfController extends Controller
             'application_deadline' => $inf->application_deadline,
             'form_data' => $inf->form_data,
             'status' => 'draft',
+            'has_edited_once' => false,
         ]);
 
         FormStatusHistory::create([
@@ -223,6 +267,75 @@ class CompanyInfController extends Controller
             'id' => $newInf->id,
             'inf' => $newInf,
         ], 201);
+    }
+
+    public function requestEdit(Request $request, Inf $inf): JsonResponse
+    {
+        $company = $request->user()?->company;
+
+        if (! $company || $inf->company_id !== $company->id) {
+            return response()->json(['message' => 'INF not found.'], 404);
+        }
+
+        // Already editable — no need to request
+        if ($this->isDirectlyEditable($inf)) {
+            return response()->json(['message' => 'Form is already directly editable.'], 400);
+        }
+
+        // Already requested — don't double-request
+        if ($inf->status === 'edit_requested') {
+            return response()->json(['message' => 'Edit request already pending.'], 400);
+        }
+
+        $validated = $request->validate([
+            'reason' => ['required', 'string', 'max:1000'],
+            'comments' => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        $oldStatus = $inf->status;
+        $inf->update(['status' => 'edit_requested']);
+
+        $remarks = 'Reason: ' . $validated['reason'];
+        if (! empty($validated['comments'])) {
+            $remarks .= ' | Comments: ' . $validated['comments'];
+        }
+
+        FormStatusHistory::create([
+            'form_type' => Inf::class,
+            'form_id' => $inf->id,
+            'old_status' => $oldStatus,
+            'new_status' => 'edit_requested',
+            'changed_by' => $request->user()?->id,
+            'remarks' => $remarks,
+        ]);
+
+        $admins = User::where('role', 'admin')->get();
+        foreach ($admins as $admin) {
+            try {
+                Mail::to($admin->email)->send(new FormEditRequestedMail(
+                    'INF',
+                    $inf->internship_title,
+                    $company->name,
+                    $request->user()->name
+                ));
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error('FormEditRequestedMail failed', [
+                    'to' => $admin->email,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+            PortalNotification::create([
+                'user_id' => $admin->id,
+                'title' => 'Edit Requested for INF',
+                'message' => sprintf('%s requested to edit INF: %s. Reason: %s', $company->name, $inf->internship_title, $validated['reason']),
+                'type' => 'warning',
+            ]);
+        }
+
+        return response()->json([
+            'message' => 'Edit request submitted successfully. The CDC admin will review your request.',
+            'inf' => $inf->fresh(),
+        ]);
     }
 
     private function sendSubmissionEmailAndNotify(Request $request, Inf $inf): void

@@ -183,11 +183,11 @@
 
 ### Phase 10 Progress (Steps 91-100)
 
-- ⏳ Step 91: Pending (additional form field validation hardening pass)
+- ✅ Step 91: Implemented One-Time Edit tracking (`has_edited_once` flag) locking submissions to a single post-submit edit.
 - ✅ Step 92: Implemented API rate limiting via `throttle:api` route middleware + explicit `api` limiter configuration
 - ✅ Step 93: Added loading-state UX across key admin/company listing and notification pages
 - ✅ Step 94: Added frontend route-level error boundary (`frontend/app/error.tsx`)
-- ⏳ Step 95: Pending (database query optimization pass)
+- ✅ Step 95: Implemented "Request to Edit" API and UI with Admin warning notifications and SMTP mail dispatch.
 - ✅ Step 96: Added end-user operational guide (`docs/USER_GUIDE.md`)
 - ✅ Step 97: Added developer guide with architecture/testing/ops runbook (`docs/DEVELOPER_GUIDE.md`)
 - ⏳ Step 98: Pending (production environment setup checklist)

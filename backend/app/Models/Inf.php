@@ -26,6 +26,7 @@ class Inf extends Model
         'vacancies',
         'application_deadline',
         'status',
+        'has_edited_once',
         'admin_remarks',
         'form_data',
     ];
@@ -43,6 +44,7 @@ class Inf extends Model
             'internship_duration_weeks' => 'integer',
             'vacancies' => 'integer',
             'form_data' => 'array',
+            'has_edited_once' => 'boolean',
         ];
     }
 

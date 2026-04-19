@@ -29,6 +29,7 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  TextField,
   Tooltip,
   Typography,
   alpha,
@@ -47,6 +48,7 @@ import CancelIcon from "@mui/icons-material/Cancel";
 import DraftsIcon from "@mui/icons-material/Drafts";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import BusinessIcon from "@mui/icons-material/Business";
+import EditNotificationsIcon from "@mui/icons-material/EditNotifications";
 import { companyApi } from "@/lib/companyApi";
 
 type DashboardResponse = {
@@ -70,12 +72,14 @@ type DashboardResponse = {
     id: number;
     job_title: string;
     status: string;
+    has_edited_once: boolean;
     updated_at: string;
   }>;
   recent_infs?: Array<{
     id: number;
     internship_title: string;
     status: string;
+    has_edited_once: boolean;
     updated_at: string;
   }>;
 };
@@ -108,6 +112,11 @@ export default function CompanyDashboard() {
   const [menuAnchor, setMenuAnchor] = useState<{ el: HTMLElement | null; type: "jnf" | "inf"; id: number } | null>(null);
   const [duplicateDialog, setDuplicateDialog] = useState<{ open: boolean; type: "jnf" | "inf"; id: number; title: string } | null>(null);
   const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; type: "jnf" | "inf"; id: number; title: string } | null>(null);
+  const [requestEditTarget, setRequestEditTarget] = useState<{ type: "jnf" | "inf"; id: number; title: string } | null>(null);
+  const [editReason, setEditReason] = useState("");
+  const [editComments, setEditComments] = useState("");
+  const [editReasonError, setEditReasonError] = useState("");
+  const [submitingRequest, setSubmittingRequest] = useState(false);
 
   const fetchDashboard = async () => {
     try {
@@ -123,6 +132,7 @@ export default function CompanyDashboard() {
   useEffect(() => {
     void fetchDashboard();
   }, []);
+
 
   const handleDuplicate = async () => {
     if (!duplicateDialog) return;
@@ -150,10 +160,37 @@ export default function CompanyDashboard() {
       
       await companyApi(endpoint, { method: "DELETE" });
       setDeleteDialog(null);
-      // Refresh the dashboard data
       await fetchDashboard();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to delete.");
+    }
+  };
+
+  const openRequestEditModal = (type: "jnf" | "inf", id: number, title: string) => {
+    setRequestEditTarget({ type, id, title });
+    setEditReason("");
+    setEditComments("");
+    setEditReasonError("");
+  };
+
+  const handleSubmitEditRequest = async () => {
+    if (!editReason.trim()) { setEditReasonError("Reason is required."); return; }
+    if (!requestEditTarget) return;
+    setSubmittingRequest(true);
+    try {
+      const endpoint = requestEditTarget.type === "jnf"
+        ? `/company/jnfs/${requestEditTarget.id}/request-edit`
+        : `/company/infs/${requestEditTarget.id}/request-edit`;
+      await companyApi(endpoint, {
+        method: "POST",
+        body: JSON.stringify({ reason: editReason.trim(), comments: editComments.trim() }),
+      });
+      setRequestEditTarget(null);
+      await fetchDashboard();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to submit request.");
+    } finally {
+      setSubmittingRequest(false);
     }
   };
 
@@ -325,11 +362,31 @@ export default function CompanyDashboard() {
                               <VisibilityIcon fontSize="small" />
                             </IconButton>
                           </Tooltip>
-                          <Tooltip title="Edit">
-                            <IconButton component={Link} href={`/company/jnf/${jnf.id}/edit`} size="small">
-                              <EditIcon fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
+                          {(jnf.status === "draft" || (jnf.status === "submitted" && !jnf.has_edited_once)) ? (
+                            <Tooltip title="Edit">
+                              <IconButton component={Link} href={`/company/jnf/${jnf.id}/edit`} size="small">
+                                <EditIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                          ) : jnf.status === "edit_requested" ? (
+                            <Tooltip title="Edit Request Pending">
+                              <span>
+                                <IconButton size="small" disabled>
+                                  <EditIcon fontSize="small" />
+                                </IconButton>
+                              </span>
+                            </Tooltip>
+                          ) : (
+                            <Tooltip title="Request to Edit">
+                              <IconButton
+                                size="small"
+                                color="warning"
+                                onClick={() => openRequestEditModal("jnf", jnf.id, jnf.job_title)}
+                              >
+                                <EditNotificationsIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                          )}
                           <Tooltip title="Duplicate for New Role">
                             <IconButton
                               size="small"
@@ -421,11 +478,31 @@ export default function CompanyDashboard() {
                               <VisibilityIcon fontSize="small" />
                             </IconButton>
                           </Tooltip>
-                          <Tooltip title="Edit">
-                            <IconButton component={Link} href={`/company/inf/${inf.id}/edit`} size="small">
-                              <EditIcon fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
+                          {(inf.status === "draft" || (inf.status === "submitted" && !inf.has_edited_once)) ? (
+                            <Tooltip title="Edit">
+                              <IconButton component={Link} href={`/company/inf/${inf.id}/edit`} size="small">
+                                <EditIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                          ) : inf.status === "edit_requested" ? (
+                            <Tooltip title="Edit Request Pending">
+                              <span>
+                                <IconButton size="small" disabled>
+                                  <EditIcon fontSize="small" />
+                                </IconButton>
+                              </span>
+                            </Tooltip>
+                          ) : (
+                            <Tooltip title="Request to Edit">
+                              <IconButton
+                                size="small"
+                                color="warning"
+                                onClick={() => openRequestEditModal("inf", inf.id, inf.internship_title)}
+                              >
+                                <EditNotificationsIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                          )}
                           <Tooltip title="Duplicate for New Role">
                             <IconButton
                               size="small"
@@ -462,6 +539,42 @@ export default function CompanyDashboard() {
           )}
         </CardContent>
       </Card>
+
+      {/* Request Edit Modal */}
+      <Dialog open={!!requestEditTarget} onClose={() => setRequestEditTarget(null)} maxWidth="sm" fullWidth>
+        <DialogTitle>Request to Edit — {requestEditTarget?.title}</DialogTitle>
+        <DialogContent>
+          <DialogContentText sx={{ mb: 2 }}>
+            Your form has already been submitted. Please provide a reason. The CDC admin will review and approve or reject your request.
+          </DialogContentText>
+          <Stack spacing={2}>
+            <TextField
+              label="Reason for Edit *"
+              value={editReason}
+              onChange={(e) => { setEditReason(e.target.value); setEditReasonError(""); }}
+              error={!!editReasonError}
+              helperText={editReasonError || "Briefly explain why you need to modify this form."}
+              fullWidth
+              multiline
+              rows={3}
+            />
+            <TextField
+              label="Additional Comments (Optional)"
+              value={editComments}
+              onChange={(e) => setEditComments(e.target.value)}
+              fullWidth
+              multiline
+              rows={2}
+            />
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setRequestEditTarget(null)} disabled={submitingRequest}>Cancel</Button>
+          <Button onClick={() => void handleSubmitEditRequest()} variant="contained" disabled={submitingRequest}>
+            {submitingRequest ? "Submitting..." : "Submit Request"}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Duplicate Dialog */}
       <Dialog open={duplicateDialog?.open || false} onClose={() => setDuplicateDialog(null)}>

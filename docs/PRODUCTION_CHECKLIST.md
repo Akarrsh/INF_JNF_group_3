@@ -87,5 +87,6 @@ npm run frontend:test:perf
 - [ ] Admin login + dashboard sanity check.
 - [ ] Company login + JNF/INF submit sanity check.
 - [ ] Status update workflow sanity check (admin -> company notification).
+- [ ] Edit Governance workflow sanity check (company request edit -> admin notification -> email).
 - [ ] Email delivery sanity check.
 - [ ] Launch approval recorded.

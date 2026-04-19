@@ -39,15 +39,11 @@ The portal supports company onboarding, JNF/INF submission, review workflows, an
 3. Use autosave while drafting.
 4. Submit for review.
 
-### 6. Track Submission Status
+### 6. Track Submission Status & Request Edits
 1. Open Submissions.
-2. Check each form status:
-- draft
-- submitted
-- under_review
-- accepted
-- rejected
-3. Open details for review remarks/history.
+2. Check each form status (`draft`, `submitted`, `under_review`, `accepted`, `rejected`, `edit_requested`).
+3. **One-Time Edit**: If your form is `submitted` and you haven't edited it post-submission, you can click **Edit**. Warning: saving an edit locks the form permanently.
+4. **Request to Edit**: If your form is locked out from direct editing, click the **Request to Edit** button. Provide a mandatory reason. Your request will be sent to the CDC Admins.
 
 ### 7. Notifications
 1. Open Notifications.
@@ -79,9 +75,9 @@ The portal supports company onboarding, JNF/INF submission, review workflows, an
 3. Open company detail.
 4. Update company metadata if needed.
 
-### 5. Notifications
+### 5. Notifications & Edit Requests
 1. Open Admin -> Notifications.
-2. Review in-app events.
+2. Review in-app events, including **Edit Requested** alerts from companies (which display their specific reason for wanting to edit a locked form).
 3. Mark read as required.
 
 ## Troubleshooting

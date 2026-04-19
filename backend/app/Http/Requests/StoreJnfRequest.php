@@ -29,7 +29,7 @@ class StoreJnfRequest extends FormRequest
             'ctc_max' => ['nullable', 'integer', 'min:0', 'gte:ctc_min'],
             'vacancies' => ['nullable', 'integer', 'min:1'],
             'application_deadline' => ['nullable', 'date'],
-            'status' => ['nullable', 'in:draft,submitted,under_review,accepted,rejected'],
+            'status' => ['nullable', 'in:draft,submitted,under_review,accepted,rejected,edit_requested'],
             'admin_remarks' => ['nullable', 'string', 'max:2000'],
         ];
     }

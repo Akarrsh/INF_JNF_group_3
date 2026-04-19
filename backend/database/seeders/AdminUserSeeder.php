@@ -13,10 +13,10 @@ class AdminUserSeeder extends Seeder
     public function run(): void
     {
         User::updateOrCreate(
-            ['email' => 'admin@iitism.ac.in'],
+            ['email' => 'iitismcdc@gmail.com'],
             [
                 'name' => 'CDC Admin',
-                'password' => 'password123',
+                'password' => 'Admin@123',
                 'role' => 'admin',
                 'company_id' => null,
             ]

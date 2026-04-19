@@ -107,10 +107,12 @@ Base URL (local): `http://localhost:8000/api`
 
 ### JNF
 - POST /company/jnfs/autosave
+- POST /company/jnfs/{jnf}/request-edit
 - Resource routes under /company/jnfs
 
 ### INF
 - POST /company/infs/autosave
+- POST /company/infs/{inf}/request-edit
 - Resource routes under /company/infs
 
 ## Notes

@@ -57,3 +57,6 @@ export async function companyFileUpload(file: File): Promise<{ file: { path: str
 
   return (await response.json()) as { file: { path: string; url: string; name: string; size: number; mime: string } };
 }
+
+
+

@@ -91,10 +91,12 @@ Route::middleware(['auth:sanctum', 'role:company'])->prefix('company')->group(fu
 
     Route::post('/jnfs/autosave', [CompanyJnfController::class, 'autosave']);
     Route::post('/jnfs/{jnf}/duplicate', [CompanyJnfController::class, 'duplicate']);
+    Route::post('/jnfs/{jnf}/request-edit', [CompanyJnfController::class, 'requestEdit']);
     Route::apiResource('jnfs', CompanyJnfController::class);
 
     Route::post('/infs/autosave', [CompanyInfController::class, 'autosave']);
     Route::post('/infs/{inf}/duplicate', [CompanyInfController::class, 'duplicate']);
+    Route::post('/infs/{inf}/request-edit', [CompanyInfController::class, 'requestEdit']);
     Route::apiResource('infs', CompanyInfController::class);
 });
 });
