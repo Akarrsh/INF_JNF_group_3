@@ -11,6 +11,7 @@ use App\Http\Controllers\CompanyDashboardController;
 use App\Http\Controllers\CompanyFileUploadController;
 use App\Http\Controllers\CompanyInfController;
 use App\Http\Controllers\CompanyJnfController;
+use App\Http\Controllers\JdParseController;
 use App\Http\Controllers\CompanyProfileController;
 use App\Http\Controllers\EligibilityCatalogueController;
 use App\Http\Controllers\NotificationController;
@@ -88,6 +89,7 @@ Route::middleware(['auth:sanctum', 'role:company'])->prefix('company')->group(fu
     Route::put('/profile', [CompanyProfileController::class, 'update']);
 
     Route::post('/uploads', [CompanyFileUploadController::class, 'store']);
+    Route::post('/jd-parse', [JdParseController::class, 'parse']);
 
     Route::post('/jnfs/autosave', [CompanyJnfController::class, 'autosave']);
     Route::post('/jnfs/{jnf}/duplicate', [CompanyJnfController::class, 'duplicate']);

@@ -31,6 +31,7 @@ import DescriptionIcon from "@mui/icons-material/Description";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import SaveIcon from "@mui/icons-material/Save";
 import SendIcon from "@mui/icons-material/Send";
+import AutoFixHighIcon from "@mui/icons-material/AutoFixHigh";
 
 import {
   FormSection,
@@ -56,6 +57,7 @@ import type {
   SalaryComponents,
 } from "./shared";
 import { companyApi, companyFileUpload } from "@/lib/companyApi";
+import { useJdAutofill } from "@/lib/useJdAutofill";
 
 export interface JnfFormData {
   // Job Details
@@ -176,6 +178,10 @@ export default function JnfFormPro({ initialData, onSaved, isAdminMode, onAdminS
     severity: "info",
   });
   const [uploadedFiles, setUploadedFiles] = useState<Array<{ name: string; url: string }>>([]);
+
+  const { status: aiStatus, errorMsg: aiError, missingFields, parseAndFill } = useJdAutofill(
+    (patch) => setFormData((prev) => ({ ...prev, ...patch }))
+  );
 
   // Auto-save debounce
   const autoSave = useCallback(async () => {
@@ -458,6 +464,18 @@ export default function JnfFormPro({ initialData, onSaved, isAdminMode, onAdminS
         </Alert>
       )}
 
+      {/* AI missing-fields guidance banner */}
+      {aiStatus === "success" && missingFields.length > 0 && (
+        <Alert
+          severity="warning"
+          sx={{ mb: 3, borderRadius: 2 }}
+          onClose={() => {}}
+        >
+          <strong>Not found in JD — please fill manually:</strong>{" "}
+          {missingFields.join(" · ")}
+        </Alert>
+      )}
+
       {/* Tab Content */}
       <Box sx={{ minHeight: 400 }}>
         {/* Tab 0: Job Details */}
@@ -578,21 +596,77 @@ export default function JnfFormPro({ initialData, onSaved, isAdminMode, onAdminS
                     placeholder="https://..."
                     helperText="If students need to register on your portal"
                   />
-                  <Box>
-                    <Button variant="outlined" component="label" sx={{ height: 56 }}>
-                      Upload JD (PDF)
+
+                  {/* ── AI-powered JD upload ── */}
+                  <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+                    <Button
+                      id="jd-ai-upload-btn"
+                      variant="outlined"
+                      component="label"
+                      disabled={aiStatus === "loading"}
+                      startIcon={
+                        aiStatus === "loading" ? (
+                          <CircularProgress size={16} />
+                        ) : aiStatus === "success" ? (
+                          <CheckCircleIcon />
+                        ) : (
+                          <AutoFixHighIcon />
+                        )
+                      }
+                      color={
+                        aiStatus === "success"
+                          ? "success"
+                          : aiStatus === "error"
+                          ? "error"
+                          : "primary"
+                      }
+                      sx={{
+                        height: 56,
+                        fontWeight: 700,
+                        whiteSpace: "nowrap",
+                        borderRadius: 2,
+                        px: 2.5,
+                        transition: "all 0.2s",
+                      }}
+                    >
+                      {aiStatus === "loading"
+                        ? "AI Parsing…"
+                        : aiStatus === "success"
+                        ? "✓ AI Filled!"
+                        : "Upload JD + AI Fill"}
                       <input
                         type="file"
                         hidden
                         accept=".pdf"
-                        onChange={(e) => {
+                        onChange={async (e) => {
                           const file = e.target.files?.[0];
-                          if (file) handleFileUpload(file);
+                          if (!file) return;
+                          // Run file upload and AI parse in parallel
+                          await Promise.allSettled([
+                            handleFileUpload(file),
+                            parseAndFill(file, formData),
+                          ]);
+                          // Reset the input so the same file can be re-selected
+                          e.target.value = "";
                         }}
                       />
                     </Button>
+
+                    {/* Status captions */}
+                    {aiStatus === "success" && (
+                      <Typography variant="caption" color="success.main">
+                        ✨ Form auto-filled — please review &amp; adjust
+                      </Typography>
+                    )}
+                    {aiStatus === "error" && aiError && (
+                      <Typography variant="caption" color="error">
+                        ⚠️ {aiError}
+                      </Typography>
+                    )}
+
+                    {/* Uploaded file list */}
                     {uploadedFiles.map((f) => (
-                      <Typography key={f.url} variant="caption" display="block">
+                      <Typography key={f.url} variant="caption" color="text.secondary" display="block">
                         📎 {f.name}
                       </Typography>
                     ))}
