@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   Alert,
-  Avatar,
   Box,
   Button,
   Card,
@@ -13,7 +12,6 @@ import {
   Grid2,
   IconButton,
   LinearProgress,
-  Paper,
   Stack,
   Table,
   TableBody,
@@ -23,8 +21,8 @@ import {
   TableRow,
   Tooltip,
   Typography,
-  alpha,
 } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 import BusinessIcon from "@mui/icons-material/Business";
 import WorkIcon from "@mui/icons-material/Work";
 import SchoolIcon from "@mui/icons-material/School";
@@ -35,6 +33,8 @@ import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import AssignmentIcon from "@mui/icons-material/Assignment";
+import NotificationsActiveIcon from "@mui/icons-material/NotificationsActive";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import { adminApi } from "@/lib/adminApi";
 
 type DashboardData = {
@@ -71,24 +71,24 @@ type DashboardData = {
   };
 };
 
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case "accepted": return "success";
-    case "submitted": return "warning";
-    case "under_review": return "info";
-    case "rejected": return "error";
-    default: return "default";
-  }
+const STATUS_CONFIG: Record<string, { color: "success" | "warning" | "info" | "error" | "default"; label: string }> = {
+  accepted:     { color: "success", label: "Accepted" },
+  submitted:    { color: "warning", label: "Submitted" },
+  under_review: { color: "info",    label: "Under Review" },
+  rejected:     { color: "error",   label: "Rejected" },
+  draft:        { color: "default", label: "Draft" },
 };
 
-const getStatusIcon = (status: string) => {
-  switch (status) {
-    case "accepted": return <CheckCircleIcon fontSize="small" />;
-    case "submitted": return <HourglassEmptyIcon fontSize="small" />;
-    case "under_review": return <PendingIcon fontSize="small" />;
-    case "rejected": return <CancelIcon fontSize="small" />;
-    default: return null;
-  }
+const StatusChip = ({ status }: { status: string }) => {
+  const cfg = STATUS_CONFIG[status] ?? { color: "default" as const, label: status };
+  return (
+    <Chip
+      label={cfg.label}
+      size="small"
+      color={cfg.color}
+      sx={{ fontWeight: 600, fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.04em" }}
+    />
+  );
 };
 
 export default function AdminPage() {
@@ -112,97 +112,134 @@ export default function AdminPage() {
 
   if (loading) {
     return (
-      <Box sx={{ py: 4 }}>
-        <LinearProgress />
-        <Typography textAlign="center" mt={2}>Loading dashboard...</Typography>
+      <Box sx={{ py: 6 }}>
+        <LinearProgress sx={{ borderRadius: 1, mb: 3 }} />
+        <Typography textAlign="center" color="text.secondary">Loading dashboard…</Typography>
       </Box>
     );
   }
 
   const stats = data?.stats;
 
+  const kpiCards = [
+    {
+      label: "Total Companies",
+      value: stats?.companies_total ?? 0,
+      sub: `${stats?.companies_with_submissions ?? 0} with submissions`,
+      icon: <BusinessIcon />,
+      iconBg: "#1a3a5c",
+      href: "/admin/companies",
+    },
+    {
+      label: "Pending Reviews",
+      value: stats?.pending_reviews ?? 0,
+      sub: "Needs attention",
+      icon: <NotificationsActiveIcon />,
+      iconBg: "#b45309",
+      href: "/admin/jnfs?status=submitted",
+      urgent: (stats?.pending_reviews ?? 0) > 0,
+    },
+    {
+      label: "JNFs",
+      value: stats?.jnf_total ?? 0,
+      sub: `${stats?.jnf_accepted ?? 0} accepted · ${stats?.jnf_submitted ?? 0} pending`,
+      icon: <WorkIcon />,
+      iconBg: "#1e40af",
+      href: "/admin/jnfs",
+    },
+    {
+      label: "INFs",
+      value: stats?.inf_total ?? 0,
+      sub: `${stats?.inf_accepted ?? 0} accepted · ${stats?.inf_submitted ?? 0} pending`,
+      icon: <SchoolIcon />,
+      iconBg: "#5b21b6",
+      href: "/admin/infs",
+    },
+  ];
+
   return (
-    <Box>
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+    <Box sx={{ pb: 6, maxWidth: 1400, mx: "auto" }}>
+      {error && <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>{error}</Alert>}
 
-      {/* Welcome Header */}
-      <Paper
-        sx={{
-          p: 3,
-          mb: 3,
-          background: (theme) =>
-            `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 100%)`,
-          color: "white",
-          borderRadius: 2,
-        }}
-      >
-        <Stack direction={{ xs: "column", md: "row" }} justifyContent="space-between" alignItems={{ md: "center" }} spacing={2}>
-          <Stack direction="row" spacing={2} alignItems="center">
-            <Avatar sx={{ width: 56, height: 56, bgcolor: "white", color: "primary.main" }}>
-              <AssignmentIcon fontSize="large" />
-            </Avatar>
-            <Box>
-              <Typography variant="h5" fontWeight={700}>
-                Admin Dashboard
-              </Typography>
-              <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                IIT (ISM) Dhanbad — Career Development Centre
-              </Typography>
-            </Box>
-          </Stack>
-          <Stack direction="row" spacing={2}>
-            <Button
-              component={Link}
-              href="/admin/jnfs"
-              variant="contained"
-              startIcon={<WorkIcon />}
-              sx={{ bgcolor: "white", color: "primary.main", "&:hover": { bgcolor: "grey.100" } }}
-            >
-              Review JNFs
-            </Button>
-            <Button
-              component={Link}
-              href="/admin/infs"
-              variant="outlined"
-              startIcon={<SchoolIcon />}
-              sx={{ color: "white", borderColor: "white", "&:hover": { borderColor: "white", bgcolor: alpha("#fff", 0.1) } }}
-            >
-              Review INFs
-            </Button>
-          </Stack>
-        </Stack>
-      </Paper>
+      {/* Page header */}
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h4" fontWeight={800} color="text.primary" letterSpacing="-0.02em" mb={0.5}>
+          Admin Dashboard
+        </Typography>
+        <Typography variant="body1" color="text.secondary">
+          IIT (ISM) Dhanbad — Career Development Centre Operations
+        </Typography>
+      </Box>
 
-      {/* Pending Alert */}
+      {/* Urgent pending alert */}
       {(stats?.pending_reviews ?? 0) > 0 && (
-        <Alert severity="warning" sx={{ mb: 3 }}>
-          <strong>{stats?.pending_reviews} submissions</strong> are pending review. Please review them at your earliest.
+        <Alert
+          severity="warning"
+          sx={{ mb: 3, borderRadius: 2, fontWeight: 500 }}
+          action={
+            <Button component={Link} href="/admin/jnfs?status=submitted" size="small" color="warning" variant="outlined" sx={{ fontWeight: 700, whiteSpace: "nowrap" }}>
+              Review Now
+            </Button>
+          }
+        >
+          <strong>{stats?.pending_reviews} submissions</strong> are pending review — please act at your earliest.
         </Alert>
       )}
 
-      {/* Quick Stats */}
-      <Grid2 container spacing={2} sx={{ mb: 3 }}>
-        {[
-          { label: "Total Companies", value: stats?.companies_total ?? 0, icon: <BusinessIcon />, color: "primary.main" },
-          { label: "Pending Reviews", value: stats?.pending_reviews ?? 0, icon: <HourglassEmptyIcon />, color: "warning.main" },
-          { label: "JNFs Submitted", value: stats?.jnf_submitted ?? 0, icon: <WorkIcon />, color: "info.main" },
-          { label: "INFs Submitted", value: stats?.inf_submitted ?? 0, icon: <SchoolIcon />, color: "secondary.main" },
-          { label: "JNFs Accepted", value: stats?.jnf_accepted ?? 0, icon: <CheckCircleIcon />, color: "success.main" },
-          { label: "INFs Accepted", value: stats?.inf_accepted ?? 0, icon: <CheckCircleIcon />, color: "success.main" },
-        ].map((item) => (
-          <Grid2 key={item.label} size={{ xs: 6, md: 2 }}>
-            <Card sx={{ height: "100%" }}>
-              <CardContent sx={{ py: 2 }}>
+      {/* KPI Cards */}
+      <Grid2 container spacing={3} sx={{ mb: 4 }}>
+        {kpiCards.map((card) => (
+          <Grid2 key={card.label} size={{ xs: 12, sm: 6, lg: 3 }}>
+            <Card
+              component={Link}
+              href={card.href}
+              elevation={0}
+              sx={{
+                border: "1px solid",
+                borderColor: card.urgent ? "warning.main" : "#e2e8f0",
+                borderRadius: 3,
+                p: 0.5,
+                height: "100%",
+                cursor: "pointer",
+                transition: "all 0.2s ease",
+                bgcolor: card.urgent ? alpha("#f59e0b", 0.05) : "white",
+                textDecoration: "none",
+                display: "block",
+                "&:hover": {
+                  borderColor: card.urgent ? "warning.dark" : "primary.main",
+                  boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
+                  transform: "translateY(-2px)",
+                },
+              }}
+            >
+              <CardContent sx={{ p: 3 }}>
                 <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
                   <Box>
-                    <Typography variant="caption" color="text.secondary" textTransform="uppercase" fontSize={10}>
-                      {item.label}
+                    <Typography variant="caption" color="text.secondary" fontWeight={600} textTransform="uppercase" letterSpacing="0.08em" fontSize="0.7rem">
+                      {card.label}
                     </Typography>
-                    <Typography variant="h4" fontWeight={700} sx={{ color: item.color }}>
-                      {item.value}
+                    <Typography variant="h3" fontWeight={800} color={card.urgent ? "warning.dark" : "text.primary"} lineHeight={1.1} mt={0.5}>
+                      {card.value}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" mt={0.5} display="block">
+                      {card.sub}
                     </Typography>
                   </Box>
-                  <Box sx={{ color: item.color, opacity: 0.3 }}>{item.icon}</Box>
+                  <Box
+                    sx={{
+                      width: 48,
+                      height: 48,
+                      borderRadius: 2,
+                      bgcolor: card.iconBg,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "white",
+                      flexShrink: 0,
+                    }}
+                  >
+                    {card.icon}
+                  </Box>
                 </Stack>
               </CardContent>
             </Card>
@@ -210,79 +247,132 @@ export default function AdminPage() {
         ))}
       </Grid2>
 
-      {/* Quick Actions */}
-      <Paper sx={{ p: 2, mb: 3, bgcolor: alpha("#1976d2", 0.05), border: "1px solid", borderColor: "primary.light" }}>
-        <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems="center" justifyContent="space-between">
-          <Typography variant="subtitle1" fontWeight={600}>
-            🎯 Quick Actions
-          </Typography>
-          <Stack direction="row" spacing={1} flexWrap="wrap">
-            <Button component={Link} href="/admin/jnfs?status=submitted" size="small" startIcon={<WorkIcon />}>
-              Pending JNFs ({stats?.jnf_submitted ?? 0})
-            </Button>
-            <Button component={Link} href="/admin/infs?status=submitted" size="small" startIcon={<SchoolIcon />}>
-              Pending INFs ({stats?.inf_submitted ?? 0})
-            </Button>
-            <Button component={Link} href="/admin/companies" size="small" startIcon={<BusinessIcon />}>
-              Manage Companies
-            </Button>
-          </Stack>
-        </Stack>
-      </Paper>
-
-      <Grid2 container spacing={3}>
-        {/* Recent JNF Submissions */}
+      {/* Breakdown row */}
+      <Grid2 container spacing={3} sx={{ mb: 4 }}>
+        {/* JNF breakdown */}
         <Grid2 size={{ xs: 12, md: 6 }}>
-          <Card>
-            <CardContent>
-              <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
+          <Card elevation={0} sx={{ border: "1px solid #e2e8f0", borderRadius: 3, height: "100%" }}>
+            <Box sx={{ px: 3, py: 2, borderBottom: "1px solid #f1f5f9", bgcolor: "#f8fafc", borderTopLeftRadius: 12, borderTopRightRadius: 12 }}>
+              <Stack direction="row" alignItems="center" justifyContent="space-between">
                 <Stack direction="row" spacing={1} alignItems="center">
-                  <WorkIcon color="primary" />
-                  <Typography variant="h6" fontWeight={600}>
-                    Recent JNF Submissions
-                  </Typography>
+                  <WorkIcon fontSize="small" color="primary" />
+                  <Typography variant="subtitle1" fontWeight={700}>JNF Status Breakdown</Typography>
                 </Stack>
-                <Button component={Link} href="/admin/jnfs" size="small">
+                <Button component={Link} href="/admin/jnfs" size="small" endIcon={<ArrowForwardIcon />} sx={{ fontWeight: 600 }}>
+                  View Queue
+                </Button>
+              </Stack>
+            </Box>
+            <CardContent sx={{ p: 3 }}>
+              <Grid2 container spacing={2}>
+                {[
+                  { label: "Submitted", value: stats?.jnf_submitted ?? 0, color: "warning.main" },
+                  { label: "Under Review", value: stats?.jnf_under_review ?? 0, color: "info.main" },
+                  { label: "Accepted", value: stats?.jnf_accepted ?? 0, color: "success.main" },
+                  { label: "Rejected", value: stats?.jnf_rejected ?? 0, color: "error.main" },
+                ].map((s) => (
+                  <Grid2 key={s.label} size={{ xs: 6 }}>
+                    <Box sx={{ p: 2, bgcolor: "#f8fafc", borderRadius: 2, border: "1px solid #e2e8f0" }}>
+                      <Typography variant="h5" fontWeight={800} color={s.color}>{s.value}</Typography>
+                      <Typography variant="caption" color="text.secondary" fontWeight={500}>{s.label}</Typography>
+                    </Box>
+                  </Grid2>
+                ))}
+              </Grid2>
+            </CardContent>
+          </Card>
+        </Grid2>
+
+        {/* INF breakdown */}
+        <Grid2 size={{ xs: 12, md: 6 }}>
+          <Card elevation={0} sx={{ border: "1px solid #e2e8f0", borderRadius: 3, height: "100%" }}>
+            <Box sx={{ px: 3, py: 2, borderBottom: "1px solid #f1f5f9", bgcolor: "#f8fafc", borderTopLeftRadius: 12, borderTopRightRadius: 12 }}>
+              <Stack direction="row" alignItems="center" justifyContent="space-between">
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <SchoolIcon fontSize="small" color="secondary" />
+                  <Typography variant="subtitle1" fontWeight={700}>INF Status Breakdown</Typography>
+                </Stack>
+                <Button component={Link} href="/admin/infs" size="small" color="secondary" endIcon={<ArrowForwardIcon />} sx={{ fontWeight: 600 }}>
+                  View Queue
+                </Button>
+              </Stack>
+            </Box>
+            <CardContent sx={{ p: 3 }}>
+              <Grid2 container spacing={2}>
+                {[
+                  { label: "Submitted", value: stats?.inf_submitted ?? 0, color: "warning.main" },
+                  { label: "Under Review", value: stats?.inf_under_review ?? 0, color: "info.main" },
+                  { label: "Accepted", value: stats?.inf_accepted ?? 0, color: "success.main" },
+                  { label: "Rejected", value: stats?.inf_rejected ?? 0, color: "error.main" },
+                ].map((s) => (
+                  <Grid2 key={s.label} size={{ xs: 6 }}>
+                    <Box sx={{ p: 2, bgcolor: "#f8fafc", borderRadius: 2, border: "1px solid #e2e8f0" }}>
+                      <Typography variant="h5" fontWeight={800} color={s.color}>{s.value}</Typography>
+                      <Typography variant="caption" color="text.secondary" fontWeight={500}>{s.label}</Typography>
+                    </Box>
+                  </Grid2>
+                ))}
+              </Grid2>
+            </CardContent>
+          </Card>
+        </Grid2>
+      </Grid2>
+
+      {/* Recent Submissions */}
+      <Grid2 container spacing={3}>
+        {/* Recent JNFs */}
+        <Grid2 size={{ xs: 12, lg: 6 }}>
+          <Card elevation={0} sx={{ border: "1px solid #e2e8f0", borderRadius: 3 }}>
+            <Box sx={{ px: 3, py: 2, borderBottom: "1px solid #f1f5f9", bgcolor: "#f8fafc", borderTopLeftRadius: 12, borderTopRightRadius: 12 }}>
+              <Stack direction="row" alignItems="center" justifyContent="space-between">
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <WorkIcon fontSize="small" color="primary" />
+                  <Typography variant="subtitle1" fontWeight={700}>Recent JNF Submissions</Typography>
+                </Stack>
+                <Button component={Link} href="/admin/jnfs" size="small" endIcon={<ArrowForwardIcon />} sx={{ fontWeight: 600 }}>
                   View All
                 </Button>
               </Stack>
-
+            </Box>
+            <CardContent sx={{ p: 0, "&:last-child": { pb: 0 } }}>
               {data?.recent_submissions.jnfs && data.recent_submissions.jnfs.length > 0 ? (
                 <TableContainer>
                   <Table size="small">
                     <TableHead>
-                      <TableRow>
-                        <TableCell>Job Title</TableCell>
-                        <TableCell>Company</TableCell>
-                        <TableCell>Status</TableCell>
-                        <TableCell align="right">Action</TableCell>
+                      <TableRow sx={{ bgcolor: "#fafafa" }}>
+                        <TableCell sx={{ fontWeight: 700, color: "text.secondary", fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.05em", py: 1.5 }}>
+                          Job Title
+                        </TableCell>
+                        <TableCell sx={{ fontWeight: 700, color: "text.secondary", fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.05em", py: 1.5 }}>
+                          Company
+                        </TableCell>
+                        <TableCell sx={{ fontWeight: 700, color: "text.secondary", fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.05em", py: 1.5 }}>
+                          Status
+                        </TableCell>
+                        <TableCell align="right" sx={{ py: 1.5 }} />
                       </TableRow>
                     </TableHead>
                     <TableBody>
                       {data.recent_submissions.jnfs.map((jnf) => (
-                        <TableRow key={jnf.id} hover>
-                          <TableCell>
-                            <Typography variant="body2" fontWeight={500} noWrap sx={{ maxWidth: 150 }}>
+                        <TableRow key={jnf.id} hover sx={{ "&:last-child td": { border: 0 } }}>
+                          <TableCell sx={{ py: 1.5 }}>
+                            <Typography variant="body2" fontWeight={600} noWrap sx={{ maxWidth: 160 }}>
                               {jnf.job_title}
                             </Typography>
                           </TableCell>
-                          <TableCell>
-                            <Typography variant="body2" color="text.secondary" noWrap sx={{ maxWidth: 100 }}>
-                              {jnf.company?.name ?? "-"}
+                          <TableCell sx={{ py: 1.5 }}>
+                            <Typography variant="body2" color="text.secondary" noWrap sx={{ maxWidth: 120 }}>
+                              {jnf.company?.name ?? "—"}
                             </Typography>
                           </TableCell>
-                          <TableCell>
-                            <Chip
-                              icon={getStatusIcon(jnf.status) || undefined}
-                              label={jnf.status.replace("_", " ")}
-                              size="small"
-                              color={getStatusColor(jnf.status) as "success" | "warning" | "info" | "error" | "default"}
-                              variant="outlined"
-                            />
+                          <TableCell sx={{ py: 1.5 }}>
+                            <StatusChip status={jnf.status} />
                           </TableCell>
-                          <TableCell align="right">
-                            <Tooltip title="Review">
-                              <IconButton component={Link} href={`/admin/jnfs/${jnf.id}`} size="small" color="primary">
+                          <TableCell align="right" sx={{ py: 1.5 }}>
+                            <Tooltip title="Review JNF">
+                              <IconButton component={Link} href={`/admin/jnfs/${jnf.id}`} size="small" color="primary"
+                                sx={{ border: "1px solid", borderColor: "primary.main", borderRadius: 1.5 }}
+                              >
                                 <VisibilityIcon fontSize="small" />
                               </IconButton>
                             </Tooltip>
@@ -293,66 +383,68 @@ export default function AdminPage() {
                   </Table>
                 </TableContainer>
               ) : (
-                <Box textAlign="center" py={4}>
-                  <Typography color="text.secondary">No recent JNF submissions</Typography>
+                <Box textAlign="center" py={5}>
+                  <WorkIcon sx={{ fontSize: 40, color: "text.disabled", mb: 1 }} />
+                  <Typography color="text.secondary" variant="body2">No recent JNF submissions</Typography>
                 </Box>
               )}
             </CardContent>
           </Card>
         </Grid2>
 
-        {/* Recent INF Submissions */}
-        <Grid2 size={{ xs: 12, md: 6 }}>
-          <Card>
-            <CardContent>
-              <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
+        {/* Recent INFs */}
+        <Grid2 size={{ xs: 12, lg: 6 }}>
+          <Card elevation={0} sx={{ border: "1px solid #e2e8f0", borderRadius: 3 }}>
+            <Box sx={{ px: 3, py: 2, borderBottom: "1px solid #f1f5f9", bgcolor: "#f8fafc", borderTopLeftRadius: 12, borderTopRightRadius: 12 }}>
+              <Stack direction="row" alignItems="center" justifyContent="space-between">
                 <Stack direction="row" spacing={1} alignItems="center">
-                  <SchoolIcon color="secondary" />
-                  <Typography variant="h6" fontWeight={600}>
-                    Recent INF Submissions
-                  </Typography>
+                  <SchoolIcon fontSize="small" color="secondary" />
+                  <Typography variant="subtitle1" fontWeight={700}>Recent INF Submissions</Typography>
                 </Stack>
-                <Button component={Link} href="/admin/infs" size="small">
+                <Button component={Link} href="/admin/infs" size="small" color="secondary" endIcon={<ArrowForwardIcon />} sx={{ fontWeight: 600 }}>
                   View All
                 </Button>
               </Stack>
-
+            </Box>
+            <CardContent sx={{ p: 0, "&:last-child": { pb: 0 } }}>
               {data?.recent_submissions.infs && data.recent_submissions.infs.length > 0 ? (
                 <TableContainer>
                   <Table size="small">
                     <TableHead>
-                      <TableRow>
-                        <TableCell>Internship Title</TableCell>
-                        <TableCell>Company</TableCell>
-                        <TableCell>Status</TableCell>
-                        <TableCell align="right">Action</TableCell>
+                      <TableRow sx={{ bgcolor: "#fafafa" }}>
+                        <TableCell sx={{ fontWeight: 700, color: "text.secondary", fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.05em", py: 1.5 }}>
+                          Internship Title
+                        </TableCell>
+                        <TableCell sx={{ fontWeight: 700, color: "text.secondary", fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.05em", py: 1.5 }}>
+                          Company
+                        </TableCell>
+                        <TableCell sx={{ fontWeight: 700, color: "text.secondary", fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.05em", py: 1.5 }}>
+                          Status
+                        </TableCell>
+                        <TableCell align="right" sx={{ py: 1.5 }} />
                       </TableRow>
                     </TableHead>
                     <TableBody>
                       {data.recent_submissions.infs.map((inf) => (
-                        <TableRow key={inf.id} hover>
-                          <TableCell>
-                            <Typography variant="body2" fontWeight={500} noWrap sx={{ maxWidth: 150 }}>
+                        <TableRow key={inf.id} hover sx={{ "&:last-child td": { border: 0 } }}>
+                          <TableCell sx={{ py: 1.5 }}>
+                            <Typography variant="body2" fontWeight={600} noWrap sx={{ maxWidth: 160 }}>
                               {inf.internship_title}
                             </Typography>
                           </TableCell>
-                          <TableCell>
-                            <Typography variant="body2" color="text.secondary" noWrap sx={{ maxWidth: 100 }}>
-                              {inf.company?.name ?? "-"}
+                          <TableCell sx={{ py: 1.5 }}>
+                            <Typography variant="body2" color="text.secondary" noWrap sx={{ maxWidth: 120 }}>
+                              {inf.company?.name ?? "—"}
                             </Typography>
                           </TableCell>
-                          <TableCell>
-                            <Chip
-                              icon={getStatusIcon(inf.status) || undefined}
-                              label={inf.status.replace("_", " ")}
-                              size="small"
-                              color={getStatusColor(inf.status) as "success" | "warning" | "info" | "error" | "default"}
-                              variant="outlined"
-                            />
+                          <TableCell sx={{ py: 1.5 }}>
+                            <StatusChip status={inf.status} />
                           </TableCell>
-                          <TableCell align="right">
-                            <Tooltip title="Review">
-                              <IconButton component={Link} href={`/admin/infs/${inf.id}`} size="small" color="secondary">
+                          <TableCell align="right" sx={{ py: 1.5 }}>
+                            <Tooltip title="Review INF">
+                              <IconButton component={Link} href={`/admin/infs/${inf.id}`} size="small" color="secondary"
+                                sx={{ border: "1px solid", borderColor: "secondary.main", borderRadius: 1.5 }}
+                              >
                                 <VisibilityIcon fontSize="small" />
                               </IconButton>
                             </Tooltip>
@@ -363,8 +455,9 @@ export default function AdminPage() {
                   </Table>
                 </TableContainer>
               ) : (
-                <Box textAlign="center" py={4}>
-                  <Typography color="text.secondary">No recent INF submissions</Typography>
+                <Box textAlign="center" py={5}>
+                  <SchoolIcon sx={{ fontSize: 40, color: "text.disabled", mb: 1 }} />
+                  <Typography color="text.secondary" variant="body2">No recent INF submissions</Typography>
                 </Box>
               )}
             </CardContent>

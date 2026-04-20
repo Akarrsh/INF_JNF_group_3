@@ -32,8 +32,8 @@ import {
   TextField,
   Tooltip,
   Typography,
-  alpha,
 } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 import AddIcon from "@mui/icons-material/Add";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -209,78 +209,106 @@ export default function CompanyDashboard() {
   };
 
   return (
-    <Box>
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+    <Box sx={{ pb: 6 }}>
+      {error && <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>{error}</Alert>}
 
       {/* Welcome Header */}
-      <Paper
+      <Box
         sx={{
-          p: 3,
-          mb: 3,
-          background: (theme) =>
-            `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
+          mb: 4,
+          p: { xs: 3, md: 4 },
+          borderRadius: 4,
+          background: (theme) => `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 100%)`,
           color: "white",
-          borderRadius: 2,
+          boxShadow: "0 12px 32px -8px rgba(26,58,92,0.4)",
+          position: "relative",
+          overflow: "hidden",
         }}
       >
-        <Stack direction={{ xs: "column", md: "row" }} justifyContent="space-between" alignItems={{ md: "center" }} spacing={2}>
-          <Stack direction="row" spacing={2} alignItems="center">
-            <Avatar sx={{ width: 56, height: 56, bgcolor: "white", color: "primary.main" }}>
-              <BusinessIcon fontSize="large" />
+        <Box sx={{ position: "absolute", top: 0, right: 0, bottom: 0, opacity: 0.1, backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")` }} />
+
+        <Stack direction={{ xs: "column", md: "row" }} justifyContent="space-between" alignItems={{ md: "center" }} spacing={3} sx={{ position: "relative", zIndex: 1 }}>
+          <Stack direction="row" spacing={2.5} alignItems="center">
+            <Avatar sx={{ width: 64, height: 64, bgcolor: "white", color: "primary.main", boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}>
+              <BusinessIcon sx={{ fontSize: 32 }} />
             </Avatar>
             <Box>
-              <Typography variant="h5" fontWeight={700}>
+              <Typography variant="h4" fontWeight={800} mb={0.5} sx={{ color: "white", letterSpacing: "-0.02em" }}>
                 Welcome back{data?.company?.name ? `, ${data.company.name}` : ""}!
               </Typography>
-              <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                Manage your Job and Internship Notification Forms
+              <Typography variant="body1" sx={{ color: "white", opacity: 0.85, fontWeight: 500 }}>
+                Manage your recruitment process and submissions efficiently.
               </Typography>
             </Box>
           </Stack>
-          <Stack direction="row" spacing={2}>
+
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
             <Button
               component={Link}
               href="/company/jnf/new"
               variant="contained"
-              startIcon={<AddIcon />}
-              sx={{ bgcolor: "white", color: "primary.main", "&:hover": { bgcolor: "grey.100" } }}
+              startIcon={<WorkIcon />}
+              sx={{ bgcolor: "white", color: "primary.main", fontWeight: 700, px: 3, py: 1.2, borderRadius: 2, "&:hover": { bgcolor: "grey.100" } }}
             >
-              New JNF
+              Post a JNF
             </Button>
             <Button
               component={Link}
               href="/company/inf/new"
               variant="outlined"
-              startIcon={<AddIcon />}
-              sx={{ color: "white", borderColor: "white", "&:hover": { borderColor: "white", bgcolor: alpha("#fff", 0.1) } }}
+              startIcon={<SchoolIcon />}
+              sx={{ color: "white", borderColor: "rgba(255,255,255,0.5)", fontWeight: 600, px: 3, py: 1.2, borderRadius: 2, "&:hover": { borderColor: "white", bgcolor: "rgba(255,255,255,0.1)" } }}
             >
-              New INF
+              Post an INF
             </Button>
           </Stack>
         </Stack>
-      </Paper>
+      </Box>
 
       {/* Quick Stats */}
-      <Grid2 container spacing={2} sx={{ mb: 3 }}>
+      <Typography variant="h6" fontWeight={700} color="text.primary" mb={2}>Overview</Typography>
+      <Grid2 container spacing={3} sx={{ mb: 5 }}>
         {[
-          { label: "Total JNFs", value: stats.jnf_total, icon: <WorkIcon />, color: "primary.main" },
-          { label: "JNFs Accepted", value: stats.jnf_accepted, icon: <CheckCircleIcon />, color: "success.main" },
-          { label: "Total INFs", value: stats.inf_total, icon: <SchoolIcon />, color: "secondary.main" },
-          { label: "INFs Accepted", value: stats.inf_accepted, icon: <CheckCircleIcon />, color: "success.main" },
+          { label: "Total JNFs", value: stats.jnf_total, icon: <WorkIcon />, color: "#1a3a5c" },
+          { label: "JNFs Accepted", value: stats.jnf_accepted, icon: <CheckCircleIcon />, color: "#16a34a" },
+          { label: "Total INFs", value: stats.inf_total, icon: <SchoolIcon />, color: "#c47c2a" },
+          { label: "INFs Accepted", value: stats.inf_accepted, icon: <CheckCircleIcon />, color: "#16a34a" },
         ].map((item) => (
           <Grid2 key={item.label} size={{ xs: 6, md: 3 }}>
-            <Card sx={{ height: "100%" }}>
-              <CardContent>
+            <Card
+              elevation={0}
+              sx={{
+                height: "100%",
+                border: "1px solid #e2e8f0",
+                borderRadius: 3,
+                transition: "transform 0.2s ease, box-shadow 0.2s ease",
+                "&:hover": { transform: "translateY(-4px)", boxShadow: "0 12px 24px -10px rgba(0,0,0,0.1)" },
+              }}
+            >
+              <CardContent sx={{ p: 3, "&:last-child": { pb: 3 } }}>
                 <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
                   <Box>
-                    <Typography variant="caption" color="text.secondary" textTransform="uppercase">
+                    <Typography variant="overline" color="text.secondary" fontWeight={700} sx={{ letterSpacing: "0.08em" }}>
                       {item.label}
                     </Typography>
-                    <Typography variant="h3" fontWeight={700} sx={{ color: item.color }}>
+                    <Typography variant="h3" fontWeight={800} mt={0.5} sx={{ color: item.color }}>
                       {item.value}
                     </Typography>
                   </Box>
-                  <Box sx={{ color: item.color, opacity: 0.3 }}>{item.icon}</Box>
+                  <Box
+                    sx={{
+                      width: 48,
+                      height: 48,
+                      borderRadius: 2,
+                      bgcolor: alpha(item.color, 0.1),
+                      color: item.color,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    {item.icon}
+                  </Box>
                 </Stack>
               </CardContent>
             </Card>
@@ -288,275 +316,266 @@ export default function CompanyDashboard() {
         ))}
       </Grid2>
 
-      {/* Quick Actions */}
-      <Paper sx={{ p: 2, mb: 3, bgcolor: alpha("#1976d2", 0.05), border: "1px solid", borderColor: "primary.light" }}>
-        <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems="center" justifyContent="space-between">
-          <Typography variant="subtitle1" fontWeight={600}>
-            🚀 Quick Actions
-          </Typography>
-          <Stack direction="row" spacing={1} flexWrap="wrap">
-            <Button component={Link} href="/company/jnf/new" size="small" startIcon={<WorkIcon />}>
-              Create JNF for New Role
-            </Button>
-            <Button component={Link} href="/company/inf/new" size="small" startIcon={<SchoolIcon />}>
-              Create INF for Internship
-            </Button>
-            <Button component={Link} href="/company/submissions" size="small" startIcon={<VisibilityIcon />}>
-              View All Submissions
-            </Button>
-          </Stack>
-        </Stack>
-      </Paper>
-
       {/* JNF Submissions Table */}
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
-            <Stack direction="row" spacing={1} alignItems="center">
-              <WorkIcon color="primary" />
-              <Typography variant="h6" fontWeight={600}>
-                Job Notification Forms (JNF)
-              </Typography>
-              <Chip label={stats.jnf_total} size="small" color="primary" />
-            </Stack>
-            <Button component={Link} href="/company/jnf/new" size="small" startIcon={<AddIcon />} variant="outlined">
-              Add New Profile
-            </Button>
-          </Stack>
+      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
+        <Stack direction="row" spacing={1.5} alignItems="center">
+          <Box sx={{ width: 32, height: 32, borderRadius: 1.5, bgcolor: alpha("#1a3a5c", 0.1), color: "primary.main", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <WorkIcon fontSize="small" />
+          </Box>
+          <Typography variant="h6" fontWeight={700}>Job Notification Forms (JNF)</Typography>
+          <Chip label={stats.jnf_total} size="small" sx={{ bgcolor: alpha("#1a3a5c", 0.1), color: "primary.main", fontWeight: 700 }} />
+        </Stack>
+        <Button component={Link} href="/company/submissions" size="small" endIcon={<MoreVertIcon />} sx={{ fontWeight: 600 }}>
+          View All
+        </Button>
+      </Stack>
 
-          {data?.recent_jnfs && data.recent_jnfs.length > 0 ? (
-            <TableContainer>
-              <Table size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Job Title / Profile</TableCell>
-                    <TableCell>Status</TableCell>
-                    <TableCell>Last Updated</TableCell>
-                    <TableCell align="right">Actions</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {data.recent_jnfs.map((jnf) => (
-                    <TableRow key={jnf.id} hover>
-                      <TableCell>
-                        <Typography variant="body2" fontWeight={500}>{jnf.job_title}</Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Chip
-                          icon={getStatusIcon(jnf.status) || undefined}
-                          label={jnf.status.replace("_", " ")}
-                          size="small"
-                          color={getStatusColor(jnf.status) as "success" | "info" | "error" | "default"}
-                          variant="outlined"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="caption" color="text.secondary">
-                          {new Date(jnf.updated_at).toLocaleDateString()}
-                        </Typography>
-                      </TableCell>
-                      <TableCell align="right">
-                        <Stack direction="row" spacing={0.5} justifyContent="flex-end">
-                          <Tooltip title="View">
-                            <IconButton component={Link} href={`/company/jnf/${jnf.id}`} size="small">
-                              <VisibilityIcon fontSize="small" />
+      <Card elevation={0} sx={{ mb: 5, border: "1px solid #e2e8f0", borderRadius: 3 }}>
+        {data?.recent_jnfs && data.recent_jnfs.length > 0 ? (
+          <TableContainer>
+            <Table sx={{ minWidth: 600 }}>
+              <TableHead sx={{ bgcolor: "#f8fafc" }}>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 600, color: "text.secondary", py: 2 }}>Profile Title</TableCell>
+                  <TableCell sx={{ fontWeight: 600, color: "text.secondary", py: 2 }}>Status</TableCell>
+                  <TableCell sx={{ fontWeight: 600, color: "text.secondary", py: 2 }}>Last Updated</TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 600, color: "text.secondary", py: 2 }}>Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {data.recent_jnfs.map((jnf) => (
+                  <TableRow key={jnf.id} hover sx={{ "&:last-child td": { borderBottom: 0 } }}>
+                    <TableCell>
+                      <Typography variant="subtitle2" fontWeight={700} color="text.primary">{jnf.job_title}</Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        icon={getStatusIcon(jnf.status) || undefined}
+                        label={jnf.status.replace("_", " ").toUpperCase()}
+                        size="small"
+                        color={getStatusColor(jnf.status) as "success" | "info" | "error" | "default"}
+                        sx={{ fontWeight: 700, fontSize: "0.7rem", letterSpacing: "0.05em" }}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2" color="text.secondary" fontWeight={500}>
+                        {new Date(jnf.updated_at).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
+                      </Typography>
+                    </TableCell>
+                    <TableCell align="right">
+                      <Stack direction="row" spacing={1} justifyContent="flex-end">
+                        <Tooltip title="View Details">
+                          <IconButton component={Link} href={`/company/jnf/${jnf.id}`} size="small" sx={{ color: "primary.main", bgcolor: alpha("#1a3a5c", 0.05) }}>
+                            <VisibilityIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                        {(jnf.status === "draft" || (jnf.status === "submitted" && !jnf.has_edited_once)) ? (
+                          <Tooltip title="Edit Form">
+                            <IconButton component={Link} href={`/company/jnf/${jnf.id}/edit`} size="small" sx={{ color: "#c47c2a", bgcolor: alpha("#c47c2a", 0.08) }}>
+                              <EditIcon fontSize="small" />
                             </IconButton>
                           </Tooltip>
-                          {(jnf.status === "draft" || (jnf.status === "submitted" && !jnf.has_edited_once)) ? (
-                            <Tooltip title="Edit">
-                              <IconButton component={Link} href={`/company/jnf/${jnf.id}/edit`} size="small">
+                        ) : jnf.status === "edit_requested" ? (
+                          <Tooltip title="Edit Request Pending">
+                            <span>
+                              <IconButton size="small" disabled sx={{ bgcolor: "grey.100" }}>
                                 <EditIcon fontSize="small" />
                               </IconButton>
-                            </Tooltip>
-                          ) : jnf.status === "edit_requested" ? (
-                            <Tooltip title="Edit Request Pending">
-                              <span>
-                                <IconButton size="small" disabled>
-                                  <EditIcon fontSize="small" />
-                                </IconButton>
-                              </span>
-                            </Tooltip>
-                          ) : (
-                            <Tooltip title="Request to Edit">
-                              <IconButton
-                                size="small"
-                                color="warning"
-                                onClick={() => openRequestEditModal("jnf", jnf.id, jnf.job_title)}
-                              >
-                                <EditNotificationsIcon fontSize="small" />
-                              </IconButton>
-                            </Tooltip>
-                          )}
-                          <Tooltip title="Duplicate for New Role">
+                            </span>
+                          </Tooltip>
+                        ) : (
+                          <Tooltip title="Request Edit Access">
                             <IconButton
                               size="small"
-                              onClick={() => setDuplicateDialog({ open: true, type: "jnf", id: jnf.id, title: jnf.job_title })}
+                              onClick={() => openRequestEditModal("jnf", jnf.id, jnf.job_title)}
+                              sx={{ color: "warning.dark", bgcolor: alpha("#ea580c", 0.08) }}
                             >
-                              <ContentCopyIcon fontSize="small" />
+                              <EditNotificationsIcon fontSize="small" />
                             </IconButton>
                           </Tooltip>
-                          {jnf.status === "draft" && (
-                            <Tooltip title="Delete Draft">
-                              <IconButton
-                                size="small"
-                                color="error"
-                                onClick={() => setDeleteDialog({ open: true, type: "jnf", id: jnf.id, title: jnf.job_title })}
-                              >
-                                <DeleteIcon fontSize="small" />
-                              </IconButton>
-                            </Tooltip>
-                          )}
-                        </Stack>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          ) : (
-            <Box textAlign="center" py={4}>
-              <Typography color="text.secondary" mb={2}>No JNFs created yet</Typography>
-              <Button component={Link} href="/company/jnf/new" variant="contained" startIcon={<AddIcon />}>
-                Create Your First JNF
-              </Button>
+                        )}
+                        <Tooltip title="Duplicate as Draft">
+                          <IconButton
+                            size="small"
+                            onClick={() => setDuplicateDialog({ open: true, type: "jnf", id: jnf.id, title: jnf.job_title })}
+                            sx={{ color: "text.secondary", bgcolor: "grey.100" }}
+                          >
+                            <ContentCopyIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                        {jnf.status === "draft" && (
+                          <Tooltip title="Delete Draft">
+                            <IconButton
+                              size="small"
+                              onClick={() => setDeleteDialog({ open: true, type: "jnf", id: jnf.id, title: jnf.job_title })}
+                              sx={{ color: "error.main", bgcolor: alpha("#ef4444", 0.08) }}
+                            >
+                              <DeleteIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        )}
+                      </Stack>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        ) : (
+          <Box textAlign="center" py={8} px={2}>
+            <Box sx={{ width: 64, height: 64, borderRadius: "50%", bgcolor: alpha("#1a3a5c", 0.05), display: "flex", alignItems: "center", justifyContent: "center", mx: "auto", mb: 2 }}>
+              <WorkIcon sx={{ color: "primary.main", fontSize: 32, opacity: 0.5 }} />
             </Box>
-          )}
-        </CardContent>
+            <Typography variant="h6" fontWeight={700} color="text.primary" mb={1}>No JNFs Created Yet</Typography>
+            <Typography variant="body2" color="text.secondary" mb={3} maxWidth={400} mx="auto">
+              Start your hiring process by submitting a new Job Notification Form for full-time roles.
+            </Typography>
+            <Button component={Link} href="/company/jnf/new" variant="contained" startIcon={<AddIcon />} sx={{ px: 3, borderRadius: 2 }}>
+              Create JNF
+            </Button>
+          </Box>
+        )}
       </Card>
 
       {/* INF Submissions Table */}
-      <Card>
-        <CardContent>
-          <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
-            <Stack direction="row" spacing={1} alignItems="center">
-              <SchoolIcon color="secondary" />
-              <Typography variant="h6" fontWeight={600}>
-                Internship Notification Forms (INF)
-              </Typography>
-              <Chip label={stats.inf_total} size="small" color="secondary" />
-            </Stack>
-            <Button component={Link} href="/company/inf/new" size="small" startIcon={<AddIcon />} variant="outlined" color="secondary">
-              Add New Profile
-            </Button>
-          </Stack>
+      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
+        <Stack direction="row" spacing={1.5} alignItems="center">
+          <Box sx={{ width: 32, height: 32, borderRadius: 1.5, bgcolor: alpha("#c47c2a", 0.1), color: "secondary.main", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <SchoolIcon fontSize="small" />
+          </Box>
+          <Typography variant="h6" fontWeight={700}>Internship Notification Forms (INF)</Typography>
+          <Chip label={stats.inf_total} size="small" sx={{ bgcolor: alpha("#c47c2a", 0.1), color: "secondary.main", fontWeight: 700 }} />
+        </Stack>
+        <Button component={Link} href="/company/submissions" size="small" endIcon={<MoreVertIcon />} color="secondary" sx={{ fontWeight: 600 }}>
+          View All
+        </Button>
+      </Stack>
 
-          {data?.recent_infs && data.recent_infs.length > 0 ? (
-            <TableContainer>
-              <Table size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Internship Title / Profile</TableCell>
-                    <TableCell>Status</TableCell>
-                    <TableCell>Last Updated</TableCell>
-                    <TableCell align="right">Actions</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {data.recent_infs.map((inf) => (
-                    <TableRow key={inf.id} hover>
-                      <TableCell>
-                        <Typography variant="body2" fontWeight={500}>{inf.internship_title}</Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Chip
-                          icon={getStatusIcon(inf.status) || undefined}
-                          label={inf.status.replace("_", " ")}
-                          size="small"
-                          color={getStatusColor(inf.status) as "success" | "info" | "error" | "default"}
-                          variant="outlined"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="caption" color="text.secondary">
-                          {new Date(inf.updated_at).toLocaleDateString()}
-                        </Typography>
-                      </TableCell>
-                      <TableCell align="right">
-                        <Stack direction="row" spacing={0.5} justifyContent="flex-end">
-                          <Tooltip title="View">
-                            <IconButton component={Link} href={`/company/inf/${inf.id}`} size="small">
-                              <VisibilityIcon fontSize="small" />
+      <Card elevation={0} sx={{ border: "1px solid #e2e8f0", borderRadius: 3 }}>
+        {data?.recent_infs && data.recent_infs.length > 0 ? (
+          <TableContainer>
+            <Table sx={{ minWidth: 600 }}>
+              <TableHead sx={{ bgcolor: "#f8fafc" }}>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 600, color: "text.secondary", py: 2 }}>Profile Title</TableCell>
+                  <TableCell sx={{ fontWeight: 600, color: "text.secondary", py: 2 }}>Status</TableCell>
+                  <TableCell sx={{ fontWeight: 600, color: "text.secondary", py: 2 }}>Last Updated</TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 600, color: "text.secondary", py: 2 }}>Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {data.recent_infs.map((inf) => (
+                  <TableRow key={inf.id} hover sx={{ "&:last-child td": { borderBottom: 0 } }}>
+                    <TableCell>
+                      <Typography variant="subtitle2" fontWeight={700} color="text.primary">{inf.internship_title}</Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        icon={getStatusIcon(inf.status) || undefined}
+                        label={inf.status.replace("_", " ").toUpperCase()}
+                        size="small"
+                        color={getStatusColor(inf.status) as "success" | "info" | "error" | "default"}
+                        sx={{ fontWeight: 700, fontSize: "0.7rem", letterSpacing: "0.05em" }}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2" color="text.secondary" fontWeight={500}>
+                        {new Date(inf.updated_at).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
+                      </Typography>
+                    </TableCell>
+                    <TableCell align="right">
+                      <Stack direction="row" spacing={1} justifyContent="flex-end">
+                        <Tooltip title="View Details">
+                          <IconButton component={Link} href={`/company/inf/${inf.id}`} size="small" sx={{ color: "primary.main", bgcolor: alpha("#1a3a5c", 0.05) }}>
+                            <VisibilityIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                        {(inf.status === "draft" || (inf.status === "submitted" && !inf.has_edited_once)) ? (
+                          <Tooltip title="Edit Form">
+                            <IconButton component={Link} href={`/company/inf/${inf.id}/edit`} size="small" sx={{ color: "#c47c2a", bgcolor: alpha("#c47c2a", 0.08) }}>
+                              <EditIcon fontSize="small" />
                             </IconButton>
                           </Tooltip>
-                          {(inf.status === "draft" || (inf.status === "submitted" && !inf.has_edited_once)) ? (
-                            <Tooltip title="Edit">
-                              <IconButton component={Link} href={`/company/inf/${inf.id}/edit`} size="small">
+                        ) : inf.status === "edit_requested" ? (
+                          <Tooltip title="Edit Request Pending">
+                            <span>
+                              <IconButton size="small" disabled sx={{ bgcolor: "grey.100" }}>
                                 <EditIcon fontSize="small" />
                               </IconButton>
-                            </Tooltip>
-                          ) : inf.status === "edit_requested" ? (
-                            <Tooltip title="Edit Request Pending">
-                              <span>
-                                <IconButton size="small" disabled>
-                                  <EditIcon fontSize="small" />
-                                </IconButton>
-                              </span>
-                            </Tooltip>
-                          ) : (
-                            <Tooltip title="Request to Edit">
-                              <IconButton
-                                size="small"
-                                color="warning"
-                                onClick={() => openRequestEditModal("inf", inf.id, inf.internship_title)}
-                              >
-                                <EditNotificationsIcon fontSize="small" />
-                              </IconButton>
-                            </Tooltip>
-                          )}
-                          <Tooltip title="Duplicate for New Role">
+                            </span>
+                          </Tooltip>
+                        ) : (
+                          <Tooltip title="Request Edit Access">
                             <IconButton
                               size="small"
-                              onClick={() => setDuplicateDialog({ open: true, type: "inf", id: inf.id, title: inf.internship_title })}
+                              onClick={() => openRequestEditModal("inf", inf.id, inf.internship_title)}
+                              sx={{ color: "warning.dark", bgcolor: alpha("#ea580c", 0.08) }}
                             >
-                              <ContentCopyIcon fontSize="small" />
+                              <EditNotificationsIcon fontSize="small" />
                             </IconButton>
                           </Tooltip>
-                          {inf.status === "draft" && (
-                            <Tooltip title="Delete Draft">
-                              <IconButton
-                                size="small"
-                                color="error"
-                                onClick={() => setDeleteDialog({ open: true, type: "inf", id: inf.id, title: inf.internship_title })}
-                              >
-                                <DeleteIcon fontSize="small" />
-                              </IconButton>
-                            </Tooltip>
-                          )}
-                        </Stack>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          ) : (
-            <Box textAlign="center" py={4}>
-              <Typography color="text.secondary" mb={2}>No INFs created yet</Typography>
-              <Button component={Link} href="/company/inf/new" variant="contained" color="secondary" startIcon={<AddIcon />}>
-                Create Your First INF
-              </Button>
+                        )}
+                        <Tooltip title="Duplicate as Draft">
+                          <IconButton
+                            size="small"
+                            onClick={() => setDuplicateDialog({ open: true, type: "inf", id: inf.id, title: inf.internship_title })}
+                            sx={{ color: "text.secondary", bgcolor: "grey.100" }}
+                          >
+                            <ContentCopyIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                        {inf.status === "draft" && (
+                          <Tooltip title="Delete Draft">
+                            <IconButton
+                              size="small"
+                              onClick={() => setDeleteDialog({ open: true, type: "inf", id: inf.id, title: inf.internship_title })}
+                              sx={{ color: "error.main", bgcolor: alpha("#ef4444", 0.08) }}
+                            >
+                              <DeleteIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        )}
+                      </Stack>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        ) : (
+          <Box textAlign="center" py={8} px={2}>
+            <Box sx={{ width: 64, height: 64, borderRadius: "50%", bgcolor: alpha("#c47c2a", 0.05), display: "flex", alignItems: "center", justifyContent: "center", mx: "auto", mb: 2 }}>
+              <SchoolIcon sx={{ color: "secondary.main", fontSize: 32, opacity: 0.5 }} />
             </Box>
-          )}
-        </CardContent>
+            <Typography variant="h6" fontWeight={700} color="text.primary" mb={1}>No INFs Created Yet</Typography>
+            <Typography variant="body2" color="text.secondary" mb={3} maxWidth={400} mx="auto">
+              Ready to hire interns? Submit your first Internship Notification Form here.
+            </Typography>
+            <Button component={Link} href="/company/inf/new" variant="contained" color="secondary" startIcon={<AddIcon />} sx={{ px: 3, borderRadius: 2 }}>
+              Create INF
+            </Button>
+          </Box>
+        )}
       </Card>
 
-      {/* Request Edit Modal */}
-      <Dialog open={!!requestEditTarget} onClose={() => setRequestEditTarget(null)} maxWidth="sm" fullWidth>
-        <DialogTitle>Request to Edit — {requestEditTarget?.title}</DialogTitle>
+      {/* Modals remain structurally the same, just slightly polished */}
+      <Dialog open={!!requestEditTarget} onClose={() => setRequestEditTarget(null)} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
+        <DialogTitle sx={{ fontWeight: 700 }}>Request Edit Access</DialogTitle>
         <DialogContent>
-          <DialogContentText sx={{ mb: 2 }}>
-            Your form has already been submitted. Please provide a reason. The CDC admin will review and approve or reject your request.
+          <DialogContentText sx={{ mb: 3 }}>
+            You are requesting to edit <strong>{requestEditTarget?.title}</strong>. Please provide a clear reason for the admin to review.
           </DialogContentText>
-          <Stack spacing={2}>
+          <Stack spacing={2.5}>
             <TextField
               label="Reason for Edit *"
               value={editReason}
               onChange={(e) => { setEditReason(e.target.value); setEditReasonError(""); }}
               error={!!editReasonError}
-              helperText={editReasonError || "Briefly explain why you need to modify this form."}
+              helperText={editReasonError}
               fullWidth
               multiline
               rows={3}
+              sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
             />
             <TextField
               label="Additional Comments (Optional)"
@@ -565,50 +584,47 @@ export default function CompanyDashboard() {
               fullWidth
               multiline
               rows={2}
+              sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
             />
           </Stack>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setRequestEditTarget(null)} disabled={submitingRequest}>Cancel</Button>
-          <Button onClick={() => void handleSubmitEditRequest()} variant="contained" disabled={submitingRequest}>
+        <DialogActions sx={{ p: 3, pt: 0 }}>
+          <Button onClick={() => setRequestEditTarget(null)} disabled={submitingRequest} sx={{ fontWeight: 600 }}>Cancel</Button>
+          <Button onClick={() => void handleSubmitEditRequest()} variant="contained" disabled={submitingRequest} sx={{ borderRadius: 2, px: 3, fontWeight: 600 }}>
             {submitingRequest ? "Submitting..." : "Submit Request"}
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Duplicate Dialog */}
-      <Dialog open={duplicateDialog?.open || false} onClose={() => setDuplicateDialog(null)}>
-        <DialogTitle>Duplicate {duplicateDialog?.type?.toUpperCase()}?</DialogTitle>
+      <Dialog open={duplicateDialog?.open || false} onClose={() => setDuplicateDialog(null)} PaperProps={{ sx: { borderRadius: 3 } }}>
+        <DialogTitle sx={{ fontWeight: 700 }}>Duplicate {duplicateDialog?.type?.toUpperCase()}?</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            This will create a copy of <strong>&quot;{duplicateDialog?.title}&quot;</strong> as a new draft.
-            You can then edit it for a different role (e.g., SDE → Data Analyst).
+            This creates an exact copy of <strong>&quot;{duplicateDialog?.title}&quot;</strong> as a new draft. You can easily modify it for a similar role.
           </DialogContentText>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDuplicateDialog(null)}>Cancel</Button>
-          <Button onClick={handleDuplicate} variant="contained" startIcon={<ContentCopyIcon />}>
-            Duplicate & Edit
+        <DialogActions sx={{ p: 3 }}>
+          <Button onClick={() => setDuplicateDialog(null)} sx={{ fontWeight: 600 }}>Cancel</Button>
+          <Button onClick={handleDuplicate} variant="contained" startIcon={<ContentCopyIcon />} sx={{ borderRadius: 2, fontWeight: 600 }}>
+            Duplicate as Draft
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Delete Dialog */}
-      <Dialog open={deleteDialog?.open || false} onClose={() => setDeleteDialog(null)}>
-        <DialogTitle>Delete Draft {deleteDialog?.type?.toUpperCase()}?</DialogTitle>
+      <Dialog open={deleteDialog?.open || false} onClose={() => setDeleteDialog(null)} PaperProps={{ sx: { borderRadius: 3 } }}>
+        <DialogTitle sx={{ fontWeight: 700 }}>Delete Draft?</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to delete <strong>&quot;{deleteDialog?.title}&quot;</strong>?
-            This action cannot be undone.
+            Are you sure you want to permanently delete <strong>&quot;{deleteDialog?.title}&quot;</strong>? This action cannot be undone.
           </DialogContentText>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteDialog(null)}>Cancel</Button>
-          <Button onClick={handleDelete} variant="contained" color="error" startIcon={<DeleteIcon />}>
-            Delete
+        <DialogActions sx={{ p: 3 }}>
+          <Button onClick={() => setDeleteDialog(null)} sx={{ fontWeight: 600 }}>Cancel</Button>
+          <Button onClick={handleDelete} variant="contained" color="error" startIcon={<DeleteIcon />} sx={{ borderRadius: 2, fontWeight: 600 }}>
+            Delete Draft
           </Button>
         </DialogActions>
       </Dialog>
     </Box>
   );
-}
+}

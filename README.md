@@ -7,16 +7,18 @@ A comprehensive, state-of-the-art placement portal enabling companies to securel
 ## 🎯 Features
 
 ### 🏢 Company Portal
+- **Premium SaaS Dashboard**: A highly polished, responsive interface built with Material-UI, featuring dynamic glassmorphic navigation, gradient welcome headers with perfected text contrast, and unified card-based data presentation.
+- **Guided Form Wizards**: Massive, multi-step JNF (Job Notification Forms) and INF (Internship Notification Forms) built with interactive UI patterns, animated progress bars, and structured sub-sections.
 - **Advanced Registration Setup**: Companies register via a 6-digit OTP email verification system to ensure identity authenticity.
 - **Secure Authentication**: Session-based login utilizing NextAuth.js interconnected with Laravel Sanctum API Tokens.
-- **Dynamic Form Builders**: Massive, multi-step JNF (Job Notification Forms) and INF (Internship Notification Forms) built with interactive UI patterns.
 - **Auto-Saving Drafts**: Forms save automatically in the background as the recruiter types, ensuring no data loss during long completion sessions.
-- **Form Tracking**: Track submission status (Pending, Under Review, Accepted, Rejected) in real-time.
+- **Form Tracking**: Track submission status (Pending, Under Review, Accepted, Rejected) in real-time with clean status chips, loading skeletons, and interactive empty states.
 - **Strict Edit Governance**: Implementing a one-time edit restriction post-submission with a formal "Request to Edit" workflow to prevent unauthorized continuous modifications.
 - **Email Notifications**: Instant confirmation emails upon successful form submission and when admins change form statuses.
 
 ### 🛡️ Admin Portal
-- **Comprehensive Review Queue**: Review, manage, filter, and sort all incoming JNF/INF submissions.
+- **Operations Dashboard**: A responsive, sidebar-based layout that mirrors the premium company interface for seamless internal administration, complete with skeleton loading states and clean data tables.
+- **Comprehensive Review Queue**: Review, manage, filter, and sort all incoming JNF/INF submissions within an optimized UI featuring improved hover states and structured typography.
 - **Admin Direct Edit**: Admins can directly modify submitted INFs/JNFs (bypassing company lockouts) using the native form builder.
 - **Deep-Diff Notification Engine**: When an admin edits a form, a custom recursive JSON diff algorithm detects the *exact* field changed (e.g., `Eligibility > B.Tech > CSE changed from false to true`) and sends a beautifully formatted email highlighting the change to the recruiter.
 - **Alumni Outreach Tracker**: View, filter, and review mentorship applications submitted by Alumni, complete with 1-click LinkedIn redirection and email capabilities.
@@ -32,6 +34,7 @@ A comprehensive, state-of-the-art placement portal enabling companies to securel
 ### Frontend Architecture
 - **Framework**: Next.js 15 (App Router)
 - **UI Library**: Material-UI (MUI v6) with a custom premium theme matching IIT ISM branding.
+- **Strict Typing**: Comprehensive TypeScript interfaces mapping directly to backend data structures (`types/forms.ts`).
 - **Authentication**: NextAuth.js configured with a custom credentials provider.
 - **API Proxy**: Next.js custom route rewrites (`/api/backend/*`) to gracefully handle CORS and cookie forwarding to the backend API.
 - **Form Management**: `react-hook-form` coupled with `yup` for complex nested schema validations.

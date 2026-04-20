@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   Alert,
-  Avatar,
   Box,
   Button,
   Card,
@@ -13,15 +12,11 @@ import {
   Divider,
   Grid2,
   LinearProgress,
-  List,
-  ListItem,
-  ListItemText,
   Paper,
   Snackbar,
   Stack,
   TextField,
   Typography,
-  alpha,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import BusinessIcon from "@mui/icons-material/Business";
@@ -33,18 +28,16 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import PendingIcon from "@mui/icons-material/Pending";
 import CancelIcon from "@mui/icons-material/Cancel";
 import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
-import LocationOnIcon from "@mui/icons-material/LocationOn";
-import EmailIcon from "@mui/icons-material/Email";
-import PersonIcon from "@mui/icons-material/Person";
 import EditIcon from "@mui/icons-material/Edit";
 import { adminApi } from "@/lib/adminApi";
-import JnfFormPro from "@/components/forms/JnfFormPro";
+import JnfFormPro, { JnfFormData } from "@/components/forms/JnfFormPro";
+import { DetailPageSkeleton } from "@/components/ui/Skeletons";
 
 type FormData = {
   jobTitle?: string;
   jobDesignation?: string;
   jobLocation?: string;
-  workMode?: string;
+  workMode?: "remote" | "hybrid" | "onsite";
   expectedHires?: string;
   minimumHires?: string;
   joiningMonth?: string;
@@ -54,11 +47,12 @@ type FormData = {
   registrationLink?: string;
   eligibility?: Array<{
     programme: string;
-    branches: Array<{ branch: string; selected: boolean; cgpa: string; backlogs: boolean }>;
+    expanded: boolean;
+    branches: Array<{ branch: string; selected: boolean; cgpa: string; backlogsAllowed: boolean }>;
   }>;
   globalCgpa?: string;
   globalBacklogs?: boolean;
-  currency?: string;
+  currency?: "INR" | "USD" | "EUR" | "GBP";
   programmeSalaries?: Array<{
     programme: string;
     enabled: boolean;
@@ -146,14 +140,14 @@ const getCurrencySymbol = (currency?: string) => {
 
 function SectionCard({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) {
   return (
-    <Card sx={{ mb: 2 }}>
-      <Box sx={{ px: 2, py: 1.5, bgcolor: alpha("#1976d2", 0.05), borderBottom: "1px solid", borderColor: "divider" }}>
-        <Stack direction="row" spacing={1} alignItems="center">
-          {icon}
-          <Typography variant="subtitle1" fontWeight={600}>{title}</Typography>
+    <Card elevation={0} sx={{ mb: 2.5, border: "1px solid #e2e8f0", borderRadius: 3, overflow: "hidden" }}>
+      <Box sx={{ px: 3, py: 2, bgcolor: "#f8fafc", borderBottom: "1px solid #e2e8f0" }}>
+        <Stack direction="row" spacing={1.5} alignItems="center">
+          <Box sx={{ color: "primary.main", display: "flex", "& svg": { fontSize: "1.1rem" } }}>{icon}</Box>
+          <Typography variant="subtitle1" fontWeight={700} color="text.primary">{title}</Typography>
         </Stack>
       </Box>
-      <CardContent>{children}</CardContent>
+      <CardContent sx={{ p: 3, "&:last-child": { pb: 3 } }}>{children}</CardContent>
     </Card>
   );
 }
@@ -161,8 +155,8 @@ function SectionCard({ title, icon, children }: { title: string; icon: React.Rea
 function DataRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <Grid2 size={{ xs: 12, sm: 6, md: 4 }}>
-      <Typography variant="caption" color="text.secondary" display="block">{label}</Typography>
-      <Typography variant="body2" fontWeight={500}>{value || "-"}</Typography>
+      <Typography variant="overline" color="text.disabled" display="block" sx={{ fontSize: "0.65rem", letterSpacing: "0.08em", mb: 0.25 }}>{label}</Typography>
+      <Typography variant="body2" fontWeight={600} color="text.primary">{value ?? "-"}</Typography>
     </Grid2>
   );
 }
@@ -214,7 +208,7 @@ export default function AdminJnfDetailPage() {
     }
   };
 
-  const handleAdminSave = async (payload: any) => {
+  const handleAdminSave = async (payload: Partial<JnfFormData>) => {
     setError(null);
     setSuccess(null);
     setUpdating(true);
@@ -235,14 +229,7 @@ export default function AdminJnfDetailPage() {
     }
   };
 
-  if (loading) {
-    return (
-      <Box sx={{ py: 4 }}>
-        <LinearProgress />
-        <Typography textAlign="center" mt={2}>Loading JNF details...</Typography>
-      </Box>
-    );
-  }
+  if (loading) return <DetailPageSkeleton />;
 
   // Parse form_data
   const formData: FormData = jnf?.form_data
@@ -259,50 +246,29 @@ export default function AdminJnfDetailPage() {
   const enabledRounds = (formData.selectionRounds ?? []).filter((r) => r.enabled);
 
   return (
-    <Box>
-      {/* Header */}
-      <Paper
-        sx={{
-          p: 2,
-          mb: 3,
-          background: (theme) =>
-            `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
-          color: "white",
-          borderRadius: 2,
-        }}
-      >
-        <Stack direction={{ xs: "column", md: "row" }} justifyContent="space-between" alignItems={{ md: "center" }} spacing={2}>
-          <Stack direction="row" spacing={2} alignItems="center">
-            <Avatar sx={{ width: 48, height: 48, bgcolor: "white", color: "primary.main" }}>
-              <WorkIcon />
-            </Avatar>
-            <Box>
-              <Typography variant="h5" fontWeight={700}>
-                {formData.jobTitle || jnf?.job_title || "JNF Review"}
-              </Typography>
-              <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                {jnf?.company?.name ?? "Unknown Company"} • Submitted {jnf?.created_at ? new Date(jnf.created_at).toLocaleDateString() : "-"}
-              </Typography>
-            </Box>
-          </Stack>
-          <Stack direction="row" spacing={1} alignItems="center">
-            <Chip
-              icon={getStatusIcon(jnf?.status ?? "") || undefined}
-              label={(jnf?.status ?? "").replace("_", " ").toUpperCase()}
-              color={getStatusColor(jnf?.status ?? "") as "success" | "warning" | "info" | "error" | "default"}
-              sx={{ color: "white", fontWeight: 600 }}
-            />
-            <Button
-              variant="outlined"
-              startIcon={<ArrowBackIcon />}
-              onClick={() => router.push("/admin/jnfs")}
-              sx={{ color: "white", borderColor: "white" }}
-            >
-              Back
-            </Button>
-          </Stack>
+    <Box sx={{ pb: 4 }}>
+      {/* Page header */}
+      <Box sx={{ mb: 3 }}>
+        <Stack direction={{ xs: "column", sm: "row" }} justifyContent="space-between" alignItems={{ sm: "center" }} spacing={2}>
+          <Box>
+            <Stack direction="row" spacing={1} alignItems="center" mb={0.5}>
+              <Button size="small" startIcon={<ArrowBackIcon />} onClick={() => router.push("/admin/jnfs")} sx={{ fontWeight: 600, color: "text.secondary" }}>Back to JNFs</Button>
+            </Stack>
+            <Typography variant="h5" fontWeight={800} color="text.primary" letterSpacing="-0.01em">
+              {formData.jobTitle || jnf?.job_title || "JNF Review"}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" mt={0.25}>
+              {jnf?.company?.name ?? "Unknown Company"} · Submitted {jnf?.created_at ? new Date(jnf.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "-"}
+            </Typography>
+          </Box>
+          <Chip
+            icon={getStatusIcon(jnf?.status ?? "") || undefined}
+            label={(jnf?.status ?? "").replace(/_/g, " ").toUpperCase()}
+            color={getStatusColor(jnf?.status ?? "") as "success" | "warning" | "info" | "error" | "default"}
+            sx={{ fontWeight: 700, px: 1 }}
+          />
         </Stack>
-      </Paper>
+      </Box>
 
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
       {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
@@ -329,7 +295,7 @@ export default function AdminJnfDetailPage() {
                 jobTitle: formData.jobTitle || jnf?.job_title || "",
                 jobDescription: formData.jobDescription || jnf?.job_description || "",
                 jobLocation: formData.jobLocation || jnf?.job_location || "",
-              }}
+              } as unknown as Partial<JnfFormData>}
               onAdminSave={handleAdminSave}
             />
           ) : (
@@ -412,16 +378,21 @@ export default function AdminJnfDetailPage() {
                   Programme-wise Salary
                 </Typography>
                 {enabledSalaries.length > 0 ? (
-                  <List dense disablePadding>
+                  <Stack spacing={1}>
                     {enabledSalaries.map((s) => (
-                      <ListItem key={s.programme} disablePadding sx={{ py: 0.5 }}>
-                        <ListItemText
-                          primary={s.programme}
-                          secondary={`CTC: ${symbol}${s.ctcAnnual ? parseInt(s.ctcAnnual).toLocaleString() : "-"} | Base: ${symbol}${s.baseSalary ? parseInt(s.baseSalary).toLocaleString() : "-"} | Take Home: ${symbol}${s.takeHome ? parseInt(s.takeHome).toLocaleString() : "-"}`}
-                        />
-                      </ListItem>
+                      <Box key={s.programme} sx={{ p: 1.5, border: "1px solid #e2e8f0", borderRadius: 2, bgcolor: "#f8fafc" }}>
+                        <Typography variant="body2" fontWeight={700} mb={1}>{s.programme}</Typography>
+                        <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+                          <Box><Typography variant="caption" color="text.disabled" display="block">CTC Annual</Typography>
+                            <Typography variant="body2" fontWeight={600}>{s.ctcAnnual ? `${symbol}${parseInt(s.ctcAnnual).toLocaleString()}` : "—"}</Typography></Box>
+                          <Box><Typography variant="caption" color="text.disabled" display="block">Base / Fixed</Typography>
+                            <Typography variant="body2" fontWeight={600}>{s.baseSalary ? `${symbol}${parseInt(s.baseSalary).toLocaleString()}` : "—"}</Typography></Box>
+                          <Box><Typography variant="caption" color="text.disabled" display="block">Monthly Take-home</Typography>
+                            <Typography variant="body2" fontWeight={600}>{s.takeHome ? `${symbol}${parseInt(s.takeHome).toLocaleString()}` : "—"}</Typography></Box>
+                        </Stack>
+                      </Box>
                     ))}
-                  </List>
+                  </Stack>
                 ) : (
                   <Typography variant="body2" color="text.secondary">No salary details provided</Typography>
                 )}
@@ -450,25 +421,37 @@ export default function AdminJnfDetailPage() {
                 {enabledRounds.length > 0 ? (
                   <Stack spacing={1}>
                     {enabledRounds.map((round, idx) => (
-                      <Paper key={round.id} variant="outlined" sx={{ p: 1.5 }}>
-                        <Stack direction="row" justifyContent="space-between" alignItems="center">
-                          <Stack direction="row" spacing={1} alignItems="center">
-                            <Chip label={`Round ${idx + 1}`} size="small" color="primary" />
-                            <Typography variant="body2" fontWeight={500}>
-                              {round.type.replace("_", " ")}
+                      <Box
+                        key={round.id}
+                        sx={{
+                          p: 2,
+                          border: "1px solid #e2e8f0",
+                          borderRadius: 2,
+                          borderLeft: "3px solid",
+                          borderLeftColor: "primary.main",
+                          bgcolor: "white",
+                        }}
+                      >
+                        <Stack direction={{ xs: "column", sm: "row" }} justifyContent="space-between" alignItems={{ sm: "center" }} spacing={1}>
+                          <Stack direction="row" spacing={1.5} alignItems="center">
+                            <Box sx={{ width: 24, height: 24, borderRadius: "50%", bgcolor: "primary.main", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.7rem", fontWeight: 800, flexShrink: 0 }}>
+                              {idx + 1}
+                            </Box>
+                            <Typography variant="body2" fontWeight={700} textTransform="capitalize">
+                              {round.type.replace(/_/g, " ")}
                             </Typography>
                           </Stack>
                           <Stack direction="row" spacing={1}>
-                            <Chip label={round.mode} size="small" variant="outlined" />
-                            {round.duration && <Chip label={round.duration} size="small" variant="outlined" />}
+                            <Chip label={round.mode} size="small" color={round.mode === "online" ? "info" : round.mode === "hybrid" ? "warning" : "success"} variant="outlined" sx={{ fontWeight: 600, fontSize: "0.7rem" }} />
+                            {round.duration && <Chip label={`${round.duration} min`} size="small" variant="outlined" sx={{ fontWeight: 600, fontSize: "0.7rem" }} />}
                           </Stack>
                         </Stack>
                         {round.details && (
-                          <Typography variant="body2" color="text.secondary" mt={1}>
+                          <Typography variant="body2" color="text.secondary" mt={1} sx={{ fontSize: "0.82rem" }}>
                             {round.details}
                           </Typography>
                         )}
-                      </Paper>
+                      </Box>
                     ))}
                   </Stack>
                 ) : (
@@ -500,24 +483,26 @@ export default function AdminJnfDetailPage() {
 
         {/* Sidebar - Admin Actions */}
         <Grid2 size={{ xs: 12, md: 4 }}>
-          <Card sx={{ position: "sticky", top: 16 }}>
-            <Box sx={{ px: 2, py: 1.5, bgcolor: "primary.main", color: "white" }}>
-              <Typography variant="subtitle1" fontWeight={600}>Admin Actions</Typography>
+          <Card elevation={0} sx={{ position: "sticky", top: 16, border: "1px solid #e2e8f0", borderRadius: 3, overflow: "hidden" }}>
+            {/* Sidebar header */}
+            <Box sx={{ px: 3, py: 2, bgcolor: "#f8fafc", borderBottom: "1px solid #e2e8f0" }}>
+              <Typography variant="subtitle1" fontWeight={700} color="text.primary">Admin Actions</Typography>
             </Box>
-            <CardContent>
-              <Stack spacing={2}>
-                <Box>
-                  <Typography variant="caption" color="text.secondary">Current Status</Typography>
+            <CardContent sx={{ p: 3, "&:last-child": { pb: 3 } }}>
+              <Stack spacing={2.5}>
+
+                {/* Current status */}
+                <Box sx={{ p: 2, border: "1px solid #e2e8f0", borderRadius: 2, bgcolor: "#f8fafc" }}>
+                  <Typography variant="overline" color="text.disabled" display="block" sx={{ fontSize: "0.65rem", letterSpacing: "0.08em", mb: 1 }}>Current Status</Typography>
                   <Chip
                     icon={getStatusIcon(jnf?.status ?? "") || undefined}
-                    label={(jnf?.status ?? "").replace("_", " ").toUpperCase()}
+                    label={(jnf?.status ?? "").replace(/_/g, " ").toUpperCase()}
                     color={getStatusColor(jnf?.status ?? "") as "success" | "warning" | "info" | "error" | "default"}
-                    sx={{ mt: 0.5, width: "100%" }}
+                    sx={{ fontWeight: 700, width: "100%", justifyContent: "flex-start" }}
                   />
                 </Box>
 
-                <Divider />
-
+                {/* Edit toggle */}
                 <Button
                   variant="outlined"
                   color="primary"
@@ -525,64 +510,68 @@ export default function AdminJnfDetailPage() {
                   fullWidth
                   startIcon={<EditIcon />}
                   disabled={updating}
-                  sx={{ mb: 1 }}
+                  sx={{ borderRadius: 2, fontWeight: 600 }}
                 >
                   {isEditing ? "Cancel Editing" : "Edit Form Details"}
                 </Button>
 
-                <TextField
-                  label="Admin Remarks"
-                  multiline
-                  minRows={4}
-                  value={remarks}
-                  onChange={(e) => setRemarks(e.target.value)}
-                  placeholder="Add notes or feedback for the company..."
-                  fullWidth
-                />
+                <Divider />
 
-                <Button
-                  variant="outlined"
-                  onClick={() => void updateStatus("under_review")}
-                  disabled={updating || jnf?.status === "under_review"}
-                  fullWidth
-                >
-                  Mark Under Review
-                </Button>
+                {/* Remarks */}
+                <Box>
+                  <Typography variant="overline" color="text.disabled" display="block" sx={{ fontSize: "0.65rem", letterSpacing: "0.08em", mb: 1 }}>Admin Remarks</Typography>
+                  <TextField
+                    multiline
+                    minRows={3}
+                    value={remarks}
+                    onChange={(e) => setRemarks(e.target.value)}
+                    placeholder="Add notes or feedback for the company..."
+                    fullWidth
+                    size="small"
+                    sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+                  />
+                </Box>
 
-                <Button
-                  variant="contained"
-                  color="success"
-                  onClick={() => void updateStatus("accepted")}
-                  disabled={updating}
-                  fullWidth
-                  startIcon={<CheckCircleIcon />}
-                >
-                  Accept JNF
-                </Button>
+                {/* Action buttons */}
+                <Stack spacing={1.5}>
+                  <Button
+                    variant="outlined"
+                    color="info"
+                    onClick={() => void updateStatus("under_review")}
+                    disabled={updating || jnf?.status === "under_review"}
+                    fullWidth
+                    startIcon={<PendingIcon />}
+                    sx={{ borderRadius: 2, fontWeight: 600 }}
+                  >
+                    Mark Under Review
+                  </Button>
+                  <Button
+                    variant="contained"
+                    color="success"
+                    onClick={() => void updateStatus("accepted")}
+                    disabled={updating}
+                    fullWidth
+                    startIcon={<CheckCircleIcon />}
+                    sx={{ borderRadius: 2, fontWeight: 700 }}
+                  >
+                    Accept JNF
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    color="error"
+                    onClick={() => void updateStatus("rejected")}
+                    disabled={updating}
+                    fullWidth
+                    startIcon={<CancelIcon />}
+                    sx={{ borderRadius: 2, fontWeight: 600 }}
+                  >
+                    Reject JNF
+                  </Button>
+                </Stack>
 
-                <Button
-                  variant="contained"
-                  color="error"
-                  onClick={() => void updateStatus("rejected")}
-                  disabled={updating}
-                  fullWidth
-                  startIcon={<CancelIcon />}
-                >
-                  Reject JNF
-                </Button>
-
-                {updating && <LinearProgress />}
-
-                {success && (
-                  <Alert severity="success" sx={{ borderRadius: 2 }}>
-                    {success}
-                  </Alert>
-                )}
-                {error && (
-                  <Alert severity="error" sx={{ borderRadius: 2 }}>
-                    {error}
-                  </Alert>
-                )}
+                {updating && <LinearProgress sx={{ borderRadius: 1 }} />}
+                {success && <Alert severity="success" sx={{ borderRadius: 2 }}>{success}</Alert>}
+                {error && <Alert severity="error" sx={{ borderRadius: 2 }}>{error}</Alert>}
               </Stack>
             </CardContent>
           </Card>

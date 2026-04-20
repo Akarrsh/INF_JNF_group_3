@@ -146,7 +146,7 @@ export default function AdminAlumniOutreachDetailPage() {
             </Avatar>
             <Box>
               <Typography variant="h5" fontWeight={700}>{alumni.name}</Typography>
-              <Typography variant="body2" sx={{ opacity: 0.9 }}>
+              <Typography variant="body2" color="inherit" sx={{ opacity: 0.9 }}>
                 {degreeLabel} • {alumni.branch} • Class of {alumni.completion_year}
               </Typography>
             </Box>

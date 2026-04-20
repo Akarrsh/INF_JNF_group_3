@@ -246,170 +246,179 @@ export default function CompanyProfilePage() {
   };
 
   return (
-    <Stack spacing={3} sx={{ pb: 4 }}>
-      <Box sx={{ mb: 1 }}>
-        <Typography variant="h3" sx={{ fontWeight: 700, color: "primary.main", mb: 0.5 }}>
+    <Box sx={{ pb: 6, maxWidth: 1000, mx: "auto" }}>
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h4" sx={{ fontWeight: 800, color: "text.primary", mb: 1, letterSpacing: "-0.02em" }}>
           Company Profile
         </Typography>
-        <Typography variant="body2" sx={{ color: "text.secondary" }}>
-          Manage and update your company information
+        <Typography variant="body1" sx={{ color: "text.secondary" }}>
+          Manage your organizational details and contact information.
         </Typography>
       </Box>
 
-      {error && <Alert severity="error" sx={{ borderRadius: 2 }}>{error}</Alert>}
-      {success && <Alert severity="success" sx={{ borderRadius: 2 }}>{success}</Alert>}
+      {error && <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>{error}</Alert>}
+      {success && <Alert severity="success" sx={{ mb: 3, borderRadius: 2 }}>{success}</Alert>}
 
-      <Card sx={{ boxShadow: 2, borderRadius: 2, border: "1px solid", borderColor: "divider" }}>
-        <CardContent>
-          <Box sx={{ bgcolor: "primary.dark", color: "primary.contrastText", px: 2, py: 1.5, borderRadius: 1, mb: 2.5, ml: -2, mr: -2, mt: -2 }}>
-            <Typography fontWeight={700} variant="subtitle1">Company Details</Typography>
+      <Stack spacing={4}>
+        {/* Core Company Details */}
+        <Card elevation={0} sx={{ border: "1px solid #e2e8f0", borderRadius: 3, overflow: "visible" }}>
+          <Box sx={{ borderBottom: "1px solid #e2e8f0", px: 4, py: 2.5, bgcolor: "#f8fafc", borderTopLeftRadius: 12, borderTopRightRadius: 12 }}>
+            <Typography variant="h6" fontWeight={700} color="primary.main">Core Details</Typography>
           </Box>
-          <Grid2 container spacing={2.5}>
-            <Grid2 size={{ xs: 12, md: 6 }}>
-              <TextField fullWidth label="Company Name" value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} disabled={loading} variant="outlined" />
+          <CardContent sx={{ p: 4 }}>
+            <Grid2 container spacing={3}>
+              <Grid2 size={{ xs: 12, md: 6 }}>
+                <TextField fullWidth label="Company Name *" value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} disabled={loading} variant="outlined" sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }} />
+              </Grid2>
+              <Grid2 size={{ xs: 12, md: 6 }}>
+                <TextField fullWidth label="Sector / Industry *" value={form.sector} onChange={(e) => setForm((p) => ({ ...p, sector: e.target.value, industry: e.target.value }))} disabled={loading} variant="outlined" sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }} />
+              </Grid2>
+              <Grid2 size={{ xs: 12, md: 6 }}>
+                <TextField fullWidth label="Website URL" placeholder="https://example.com" value={form.website} onChange={(e) => setForm((p) => ({ ...p, website: e.target.value }))} disabled={loading} variant="outlined" sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }} />
+              </Grid2>
+              <Grid2 size={{ xs: 12, md: 6 }}>
+                <TextField fullWidth label="Number of Employees" placeholder="e.g., 500+" value={form.employee_count} onChange={(e) => setForm((p) => ({ ...p, employee_count: e.target.value }))} disabled={loading} variant="outlined" sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }} />
+              </Grid2>
+              <Grid2 size={{ xs: 12 }}>
+                <TextField fullWidth label="Registered Postal Address" multiline minRows={3} value={form.postal_address} onChange={(e) => setForm((p) => ({ ...p, postal_address: e.target.value }))} disabled={loading} variant="outlined" sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }} />
+              </Grid2>
             </Grid2>
-            <Grid2 size={{ xs: 12, md: 6 }}>
-              <TextField fullWidth label="Sector" value={form.sector} onChange={(e) => setForm((p) => ({ ...p, sector: e.target.value, industry: e.target.value }))} disabled={loading} variant="outlined" />
-            </Grid2>
-            <Grid2 size={{ xs: 12, md: 6 }}>
-              <TextField fullWidth label="Website" placeholder="https://example.com" value={form.website} onChange={(e) => setForm((p) => ({ ...p, website: e.target.value }))} disabled={loading} variant="outlined" />
-            </Grid2>
-            <Grid2 size={{ xs: 12, md: 6 }}>
-              <TextField fullWidth label="Number of Employees" placeholder="e.g., 500" value={form.employee_count} onChange={(e) => setForm((p) => ({ ...p, employee_count: e.target.value }))} disabled={loading} variant="outlined" />
-            </Grid2>
-            <Grid2 size={{ xs: 12 }}>
-              <TextField fullWidth label="Postal Address" multiline minRows={3} value={form.postal_address} onChange={(e) => setForm((p) => ({ ...p, postal_address: e.target.value }))} disabled={loading} variant="outlined" />
-            </Grid2>
-          </Grid2>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      <Card sx={{ boxShadow: 2, borderRadius: 2, border: "1px solid", borderColor: "divider" }}>
-        <CardContent>
-          <Box sx={{ bgcolor: "secondary.dark", color: "secondary.contrastText", px: 2, py: 1.5, borderRadius: 1, mb: 2.5, ml: -2, mr: -2, mt: -2 }}>
-            <Typography fontWeight={700} variant="subtitle1">Extended Profile</Typography>
+        {/* Extended Profile */}
+        <Card elevation={0} sx={{ border: "1px solid #e2e8f0", borderRadius: 3, overflow: "visible" }}>
+          <Box sx={{ borderBottom: "1px solid #e2e8f0", px: 4, py: 2.5, bgcolor: "#f8fafc", borderTopLeftRadius: 12, borderTopRightRadius: 12 }}>
+            <Typography variant="h6" fontWeight={700} color="secondary.main">Extended Profile Info</Typography>
           </Box>
-          <Grid2 container spacing={2.5}>
-            <Grid2 size={{ xs: 12, md: 6 }}>
-              <TextField fullWidth label="Category / Organization Type" value={form.category_org_type} onChange={(e) => setForm((p) => ({ ...p, category_org_type: e.target.value }))} disabled={loading} variant="outlined" />
+          <CardContent sx={{ p: 4 }}>
+            <Grid2 container spacing={3}>
+              <Grid2 size={{ xs: 12, md: 6 }}>
+                <TextField fullWidth label="Organization Type" placeholder="e.g. Private, Public, Govt, NGO" value={form.category_org_type} onChange={(e) => setForm((p) => ({ ...p, category_org_type: e.target.value }))} disabled={loading} variant="outlined" sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }} />
+              </Grid2>
+              <Grid2 size={{ xs: 12, md: 6 }}>
+                <TextField fullWidth label="Date of Establishment" type="date" value={form.date_of_establishment} onChange={(e) => setForm((p) => ({ ...p, date_of_establishment: e.target.value }))} disabled={loading} InputLabelProps={{ shrink: true }} variant="outlined" sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }} />
+              </Grid2>
+              <Grid2 size={{ xs: 12, md: 6 }}>
+                <TextField fullWidth label="Annual Turnover (NIRF)" placeholder="e.g., $5M - $10M" value={form.annual_turnover} onChange={(e) => setForm((p) => ({ ...p, annual_turnover: e.target.value }))} disabled={loading} variant="outlined" sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }} />
+              </Grid2>
+              <Grid2 size={{ xs: 12, md: 6 }}>
+                <TextField fullWidth label="LinkedIn URL" placeholder="https://linkedin.com/company/..." value={form.linkedin_url} onChange={(e) => setForm((p) => ({ ...p, linkedin_url: e.target.value }))} disabled={loading} variant="outlined" sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }} />
+              </Grid2>
+              <Grid2 size={{ xs: 12, md: 6 }}>
+                <TextField fullWidth label="Industry Tags" value={form.industry_sector_tags} onChange={(e) => setForm((p) => ({ ...p, industry_sector_tags: e.target.value }))} disabled={loading} placeholder="Technology, Finance, Healthcare" helperText="Separate with commas" variant="outlined" sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }} />
+              </Grid2>
+              <Grid2 size={{ xs: 12, md: 6 }}>
+                <TextField fullWidth label="If MNC — HQ Country/City" value={form.mnc_hq_country_city} onChange={(e) => setForm((p) => ({ ...p, mnc_hq_country_city: e.target.value }))} disabled={loading} variant="outlined" sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }} />
+              </Grid2>
+              <Grid2 size={{ xs: 12, md: 6 }}>
+                <TextField fullWidth label="Nature of Business" value={form.nature_of_business} onChange={(e) => setForm((p) => ({ ...p, nature_of_business: e.target.value }))} disabled={loading} variant="outlined" sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }} />
+              </Grid2>
+              <Grid2 size={{ xs: 12 }}>
+                <TextField fullWidth label="Company Description" multiline minRows={4} value={form.company_description} onChange={(e) => setForm((p) => ({ ...p, company_description: e.target.value }))} disabled={loading} placeholder="Tell us about your company culture, mission, and achievements..." variant="outlined" sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }} />
+              </Grid2>
             </Grid2>
-            <Grid2 size={{ xs: 12, md: 6 }}>
-              <TextField fullWidth label="Date of Establishment" type="date" value={form.date_of_establishment} onChange={(e) => setForm((p) => ({ ...p, date_of_establishment: e.target.value }))} disabled={loading} InputLabelProps={{ shrink: true }} variant="outlined" />
-            </Grid2>
-            <Grid2 size={{ xs: 12, md: 6 }}>
-              <TextField fullWidth label="Annual Turnover (NIRF)" placeholder="e.g., $5M - $10M" value={form.annual_turnover} onChange={(e) => setForm((p) => ({ ...p, annual_turnover: e.target.value }))} disabled={loading} variant="outlined" />
-            </Grid2>
-            <Grid2 size={{ xs: 12, md: 6 }}>
-              <TextField fullWidth label="LinkedIn URL" placeholder="https://linkedin.com/company/..." value={form.linkedin_url} onChange={(e) => setForm((p) => ({ ...p, linkedin_url: e.target.value }))} disabled={loading} variant="outlined" />
-            </Grid2>
-            <Grid2 size={{ xs: 12, md: 6 }}>
-              <TextField fullWidth label="Industry Sector Tags" value={form.industry_sector_tags} onChange={(e) => setForm((p) => ({ ...p, industry_sector_tags: e.target.value }))} disabled={loading} placeholder="Technology, Finance, Healthcare" helperText="Separate with commas" variant="outlined" />
-            </Grid2>
-            <Grid2 size={{ xs: 12, md: 6 }}>
-              <TextField fullWidth label="If MNC — HQ Country/City" value={form.mnc_hq_country_city} onChange={(e) => setForm((p) => ({ ...p, mnc_hq_country_city: e.target.value }))} disabled={loading} variant="outlined" />
-            </Grid2>
-            <Grid2 size={{ xs: 12, md: 6 }}>
-              <TextField fullWidth label="Nature of Business" value={form.nature_of_business} onChange={(e) => setForm((p) => ({ ...p, nature_of_business: e.target.value }))} disabled={loading} variant="outlined" />
-            </Grid2>
-            <Grid2 size={{ xs: 12 }}>
-              <TextField fullWidth label="Company Description" multiline minRows={4} value={form.company_description} onChange={(e) => setForm((p) => ({ ...p, company_description: e.target.value }))} disabled={loading} placeholder="Tell us about your company..." variant="outlined" />
-            </Grid2>
-          </Grid2>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      <Card sx={{ boxShadow: 2, borderRadius: 2, border: "1px solid", borderColor: "divider" }}>
-        <CardContent>
-          <Box sx={{ bgcolor: "primary.dark", color: "primary.contrastText", px: 2, py: 1.5, borderRadius: 1, mb: 2.5, ml: -2, mr: -2, mt: -2 }}>
-            <Typography fontWeight={700} variant="subtitle1">Head Talent Acquisition</Typography>
+        {/* Head Talent Acquisition */}
+        <Card elevation={0} sx={{ border: "1px solid #e2e8f0", borderRadius: 3, overflow: "visible" }}>
+          <Box sx={{ borderBottom: "1px solid #e2e8f0", px: 4, py: 2.5, bgcolor: "#f8fafc", borderTopLeftRadius: 12, borderTopRightRadius: 12 }}>
+            <Typography variant="h6" fontWeight={700} color="primary.main">Head Talent Acquisition</Typography>
           </Box>
-          <Grid2 container spacing={2.5}>
-            <Grid2 size={{ xs: 12, md: 6 }}>
-              <TextField fullWidth label="Full Name" value={form.head_name} onChange={(e) => setForm((p) => ({ ...p, head_name: e.target.value }))} disabled={loading} variant="outlined" />
+          <CardContent sx={{ p: 4 }}>
+            <Grid2 container spacing={3}>
+              <Grid2 size={{ xs: 12, md: 6 }}>
+                <TextField fullWidth label="Full Name" value={form.head_name} onChange={(e) => setForm((p) => ({ ...p, head_name: e.target.value }))} disabled={loading} variant="outlined" sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }} />
+              </Grid2>
+              <Grid2 size={{ xs: 12, md: 6 }}>
+                <TextField fullWidth label="Designation" value={form.head_designation} onChange={(e) => setForm((p) => ({ ...p, head_designation: e.target.value }))} disabled={loading} variant="outlined" sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }} />
+              </Grid2>
+              <Grid2 size={{ xs: 12, md: 6 }}>
+                <TextField fullWidth label="Email Address" value={form.head_email} onChange={(e) => setForm((p) => ({ ...p, head_email: e.target.value }))} disabled={loading} variant="outlined" sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }} />
+              </Grid2>
+              <Grid2 size={{ xs: 12, md: 6 }}>
+                <TextField fullWidth label="Mobile Number" placeholder="+91 98765 43210" value={form.head_mobile} onChange={(e) => setForm((p) => ({ ...p, head_mobile: e.target.value }))} disabled={loading} variant="outlined" sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }} />
+              </Grid2>
+              <Grid2 size={{ xs: 12, md: 6 }}>
+                <TextField fullWidth label="Landline (Optional)" value={form.head_landline} onChange={(e) => setForm((p) => ({ ...p, head_landline: e.target.value }))} disabled={loading} variant="outlined" sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }} />
+              </Grid2>
             </Grid2>
-            <Grid2 size={{ xs: 12, md: 6 }}>
-              <TextField fullWidth label="Designation" value={form.head_designation} onChange={(e) => setForm((p) => ({ ...p, head_designation: e.target.value }))} disabled={loading} variant="outlined" />
-            </Grid2>
-            <Grid2 size={{ xs: 12, md: 6 }}>
-              <TextField fullWidth label="Email Address" value={form.head_email} onChange={(e) => setForm((p) => ({ ...p, head_email: e.target.value }))} disabled={loading} variant="outlined" />
-            </Grid2>
-            <Grid2 size={{ xs: 12, md: 6 }}>
-              <TextField fullWidth label="Mobile Number" placeholder="+91 98765 43210" value={form.head_mobile} onChange={(e) => setForm((p) => ({ ...p, head_mobile: e.target.value }))} disabled={loading} variant="outlined" />
-            </Grid2>
-            <Grid2 size={{ xs: 12, md: 6 }}>
-              <TextField fullWidth label="Landline (Optional)" value={form.head_landline} onChange={(e) => setForm((p) => ({ ...p, head_landline: e.target.value }))} disabled={loading} variant="outlined" />
-            </Grid2>
-          </Grid2>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      <Card sx={{ boxShadow: 2, borderRadius: 2, border: "1px solid", borderColor: "divider" }}>
-        <CardContent>
-          <Box sx={{ bgcolor: "secondary.dark", color: "secondary.contrastText", px: 2, py: 1.5, borderRadius: 1, mb: 2.5, ml: -2, mr: -2, mt: -2 }}>
-            <Typography fontWeight={700} variant="subtitle1">Primary Contact (PoC 1)</Typography>
+        {/* Primary Contact (PoC 1) */}
+        <Card elevation={0} sx={{ border: "1px solid #e2e8f0", borderRadius: 3, overflow: "visible" }}>
+          <Box sx={{ borderBottom: "1px solid #e2e8f0", px: 4, py: 2.5, bgcolor: "#f8fafc", borderTopLeftRadius: 12, borderTopRightRadius: 12 }}>
+            <Typography variant="h6" fontWeight={700} color="secondary.main">Primary Contact (PoC 1)</Typography>
           </Box>
-          <Grid2 container spacing={2.5}>
-            <Grid2 size={{ xs: 12, md: 6 }}>
-              <TextField fullWidth label="Full Name" value={form.poc1_name} onChange={(e) => setForm((p) => ({ ...p, poc1_name: e.target.value, hr_name: e.target.value }))} disabled={loading} variant="outlined" />
+          <CardContent sx={{ p: 4 }}>
+            <Grid2 container spacing={3}>
+              <Grid2 size={{ xs: 12, md: 6 }}>
+                <TextField fullWidth label="Full Name" value={form.poc1_name} onChange={(e) => setForm((p) => ({ ...p, poc1_name: e.target.value, hr_name: e.target.value }))} disabled={loading} variant="outlined" sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }} />
+              </Grid2>
+              <Grid2 size={{ xs: 12, md: 6 }}>
+                <TextField fullWidth label="Designation" value={form.poc1_designation} onChange={(e) => setForm((p) => ({ ...p, poc1_designation: e.target.value, hr_designation: e.target.value }))} disabled={loading} variant="outlined" sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }} />
+              </Grid2>
+              <Grid2 size={{ xs: 12, md: 6 }}>
+                <TextField fullWidth label="Email Address" value={form.poc1_email} onChange={(e) => setForm((p) => ({ ...p, poc1_email: e.target.value, hr_email: e.target.value }))} disabled={loading} variant="outlined" sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }} />
+              </Grid2>
+              <Grid2 size={{ xs: 12, md: 6 }}>
+                <TextField fullWidth label="Mobile Number" placeholder="+91 98765 43210" value={form.poc1_mobile} onChange={(e) => setForm((p) => ({ ...p, poc1_mobile: e.target.value, hr_phone: e.target.value }))} disabled={loading} variant="outlined" sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }} />
+              </Grid2>
+              <Grid2 size={{ xs: 12, md: 6 }}>
+                <TextField fullWidth label="Landline (Optional)" value={form.poc1_landline} onChange={(e) => setForm((p) => ({ ...p, poc1_landline: e.target.value, hr_alt_phone: e.target.value }))} disabled={loading} variant="outlined" sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }} />
+              </Grid2>
             </Grid2>
-            <Grid2 size={{ xs: 12, md: 6 }}>
-              <TextField fullWidth label="Designation" value={form.poc1_designation} onChange={(e) => setForm((p) => ({ ...p, poc1_designation: e.target.value, hr_designation: e.target.value }))} disabled={loading} variant="outlined" />
-            </Grid2>
-            <Grid2 size={{ xs: 12, md: 6 }}>
-              <TextField fullWidth label="Email Address" value={form.poc1_email} onChange={(e) => setForm((p) => ({ ...p, poc1_email: e.target.value, hr_email: e.target.value }))} disabled={loading} variant="outlined" />
-            </Grid2>
-            <Grid2 size={{ xs: 12, md: 6 }}>
-              <TextField fullWidth label="Mobile Number" placeholder="+91 98765 43210" value={form.poc1_mobile} onChange={(e) => setForm((p) => ({ ...p, poc1_mobile: e.target.value, hr_phone: e.target.value }))} disabled={loading} variant="outlined" />
-            </Grid2>
-            <Grid2 size={{ xs: 12, md: 6 }}>
-              <TextField fullWidth label="Landline (Optional)" value={form.poc1_landline} onChange={(e) => setForm((p) => ({ ...p, poc1_landline: e.target.value, hr_alt_phone: e.target.value }))} disabled={loading} variant="outlined" />
-            </Grid2>
-          </Grid2>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      <Card sx={{ boxShadow: 2, borderRadius: 2, border: "1px solid", borderColor: "divider" }}>
-        <CardContent>
-          <Box sx={{ bgcolor: "grey.800", color: "common.white", px: 2, py: 1.5, borderRadius: 1, mb: 2.5, ml: -2, mr: -2, mt: -2 }}>
-            <Typography fontWeight={700} variant="subtitle1">Secondary Contact (PoC 2) — Optional</Typography>
+        {/* Secondary Contact (PoC 2) */}
+        <Card elevation={0} sx={{ border: "1px solid #e2e8f0", borderRadius: 3, overflow: "visible" }}>
+          <Box sx={{ borderBottom: "1px solid #e2e8f0", px: 4, py: 2.5, bgcolor: "#f8fafc", borderTopLeftRadius: 12, borderTopRightRadius: 12 }}>
+            <Typography variant="h6" fontWeight={700} color="text.secondary">Secondary Contact (PoC 2) — Optional</Typography>
           </Box>
-          <Grid2 container spacing={2.5}>
-            <Grid2 size={{ xs: 12, md: 6 }}>
-              <TextField fullWidth label="Full Name" value={form.poc2_name} onChange={(e) => setForm((p) => ({ ...p, poc2_name: e.target.value }))} disabled={loading} variant="outlined" />
+          <CardContent sx={{ p: 4 }}>
+            <Grid2 container spacing={3}>
+              <Grid2 size={{ xs: 12, md: 6 }}>
+                <TextField fullWidth label="Full Name" value={form.poc2_name} onChange={(e) => setForm((p) => ({ ...p, poc2_name: e.target.value }))} disabled={loading} variant="outlined" sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }} />
+              </Grid2>
+              <Grid2 size={{ xs: 12, md: 6 }}>
+                <TextField fullWidth label="Designation" value={form.poc2_designation} onChange={(e) => setForm((p) => ({ ...p, poc2_designation: e.target.value }))} disabled={loading} variant="outlined" sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }} />
+              </Grid2>
+              <Grid2 size={{ xs: 12, md: 6 }}>
+                <TextField fullWidth label="Email Address" value={form.poc2_email} onChange={(e) => setForm((p) => ({ ...p, poc2_email: e.target.value }))} disabled={loading} variant="outlined" sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }} />
+              </Grid2>
+              <Grid2 size={{ xs: 12, md: 6 }}>
+                <TextField fullWidth label="Mobile Number" placeholder="+91 98765 43210" value={form.poc2_mobile} onChange={(e) => setForm((p) => ({ ...p, poc2_mobile: e.target.value }))} disabled={loading} variant="outlined" sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }} />
+              </Grid2>
+              <Grid2 size={{ xs: 12, md: 6 }}>
+                <TextField fullWidth label="Landline (Optional)" value={form.poc2_landline} onChange={(e) => setForm((p) => ({ ...p, poc2_landline: e.target.value }))} disabled={loading} variant="outlined" sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }} />
+              </Grid2>
             </Grid2>
-            <Grid2 size={{ xs: 12, md: 6 }}>
-              <TextField fullWidth label="Designation" value={form.poc2_designation} onChange={(e) => setForm((p) => ({ ...p, poc2_designation: e.target.value }))} disabled={loading} variant="outlined" />
-            </Grid2>
-            <Grid2 size={{ xs: 12, md: 6 }}>
-              <TextField fullWidth label="Email Address" value={form.poc2_email} onChange={(e) => setForm((p) => ({ ...p, poc2_email: e.target.value }))} disabled={loading} variant="outlined" />
-            </Grid2>
-            <Grid2 size={{ xs: 12, md: 6 }}>
-              <TextField fullWidth label="Mobile Number" placeholder="+91 98765 43210" value={form.poc2_mobile} onChange={(e) => setForm((p) => ({ ...p, poc2_mobile: e.target.value }))} disabled={loading} variant="outlined" />
-            </Grid2>
-            <Grid2 size={{ xs: 12, md: 6 }}>
-              <TextField fullWidth label="Landline (Optional)" value={form.poc2_landline} onChange={(e) => setForm((p) => ({ ...p, poc2_landline: e.target.value }))} disabled={loading} variant="outlined" />
-            </Grid2>
-          </Grid2>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </Stack>
 
-      <Divider sx={{ my: 1 }} />
-
-      <Button
-        variant="contained"
-        size="large"
-        onClick={onSubmit}
-        disabled={saving || loading}
-        sx={{
-          py: 1.5,
-          fontWeight: 600,
-          fontSize: "1rem",
-          borderRadius: 1.5,
-          textTransform: "none",
-        }}
-      >
-        {saving ? "Saving..." : "Save Profile"}
-      </Button>
-    </Stack>
+      <Box sx={{ mt: 5, display: "flex", justifyContent: "flex-end" }}>
+        <Button
+          variant="contained"
+          size="large"
+          onClick={onSubmit}
+          disabled={saving || loading}
+          sx={{
+            py: 1.5,
+            px: 6,
+            fontWeight: 700,
+            fontSize: "1rem",
+            borderRadius: 2,
+            boxShadow: "0 8px 16px rgba(26,58,92,0.15)",
+            "&:hover": { boxShadow: "0 12px 24px rgba(26,58,92,0.2)" },
+          }}
+        >
+          {saving ? "Saving Changes..." : "Save Profile"}
+        </Button>
+      </Box>
+    </Box>
   );
-}
+}

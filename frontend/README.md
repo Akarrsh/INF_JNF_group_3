@@ -1,3 +1,7 @@
+# CDC Placement Portal - Frontend
+
+This is the Next.js frontend application for the IIT ISM CDC Placement Portal. It features a fully modernized, SaaS-style Material-UI (MUI) design system with responsive sidebar layouts, complex data forms using `react-hook-form`, and strict TypeScript definitions.
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started

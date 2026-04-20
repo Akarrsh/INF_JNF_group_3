@@ -1,26 +1,190 @@
-@import "tailwindcss";
+/* ── Reset & Base ─────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --color-navy:       #1a3a5c;
+  --color-navy-dark:  #0f2340;
+  --color-navy-light: #2c5282;
+  --color-gold:       #c47c2a;
+  --color-bg:         #f8fafc;
+  --color-surface:    #ffffff;
+  --color-border:     #e2e8f0;
+  --color-text:       #1e293b;
+  --color-muted:      #475569;
+  --radius-sm:        6px;
+  --radius-md:        10px;
+  --radius-lg:        14px;
+  --radius-xl:        20px;
+  --transition-fast:  0.15s ease;
+  --transition-base:  0.2s ease;
+  --transition-slow:  0.3s ease;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+html { scroll-behavior: smooth; }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 15px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Typography Utilities ─────────────────────────────────────────── */
+.text-muted  { color: var(--color-muted); }
+.text-navy   { color: var(--color-navy); }
+
+/* ── Scrollbar ────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #f1f5f9; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; transition: background var(--transition-fast); }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+/* ── Focus Visible (Accessibility) ───────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--color-navy);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+}
+
+/* ── Smooth transitions for interactive elements ─────────────────── */
+a { color: var(--color-navy); text-decoration: none; transition: color var(--transition-fast); }
+a:hover { color: var(--color-navy-light); text-decoration: underline; }
+
+/* ── Animations ───────────────────────────────────────────────────── */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.6; }
+}
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+.animate-fade-in     { animation: fadeIn 0.25s ease both; }
+.animate-slide-right { animation: slideInRight 0.2s ease both; }
+.animate-pulse-soft  { animation: pulse-soft 1.8s ease-in-out infinite; }
+
+/* Shimmer skeleton */
+.skeleton-shimmer {
+  background: linear-gradient(90deg, #f1f5f9 25%, #e8eef4 50%, #f1f5f9 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.6s infinite linear;
+}
+
+/* ── MUI overrides not achievable in theme.ts ────────────────────── */
+
+/* Table header first/last cell spacing */
+.MuiTableHead-root .MuiTableCell-head:first-of-type { padding-left: 20px; }
+.MuiTableHead-root .MuiTableCell-head:last-of-type  { padding-right: 20px; }
+.MuiTableBody-root .MuiTableCell-body:first-of-type { padding-left: 20px; }
+.MuiTableBody-root .MuiTableCell-body:last-of-type  { padding-right: 20px; }
+
+/* Smooth row hover for tables */
+.MuiTableBody-root .MuiTableRow-root {
+  transition: background-color var(--transition-fast);
+}
+
+/* Card no-transition for stat cards */
+.stat-card { transition: none !important; }
+.stat-card:hover { transform: none !important; box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.06) !important; }
+
+/* Interactive card hover lift */
+.card-interactive {
+  cursor: pointer;
+  transition: box-shadow var(--transition-base), transform var(--transition-base) !important;
+}
+.card-interactive:hover {
+  box-shadow: 0 8px 24px -4px rgb(0 0 0 / 0.12) !important;
+  transform: translateY(-2px);
+}
+
+/* Section header divider line pattern */
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.section-header::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--color-border);
+}
+
+/* Premium hero gradient */
+.hero-gradient {
+  background: linear-gradient(135deg, var(--color-navy-dark) 0%, var(--color-navy) 60%, #1e4976 100%);
+}
+
+/* Soft page background texture */
+.page-bg {
+  background-color: var(--color-bg);
+  min-height: 100vh;
+}
+
+/* Badge dot */
+.badge-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+/* Status badge base */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 9px;
+  border-radius: 5px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border: 1px solid transparent;
+}
+
+/* ── Page enter animation ─────────────────────────────────────────── */
+.page-enter {
+  animation: fadeIn 0.3s ease both;
+}
+
+/* ── Snackbar / Toast polish ──────────────────────────────────────── */
+.MuiSnackbar-root .MuiAlert-root {
+  font-weight: 600;
+  backdrop-filter: blur(8px);
+}
+
+/* ── Dialog backdrop blur ─────────────────────────────────────────── */
+.MuiBackdrop-root {
+  backdrop-filter: blur(3px);
+}
+
+/* ── Responsive utilities ─────────────────────────────────────────── */
+@media (max-width: 600px) {
+  body { overflow-x: hidden; }
+  .responsive-table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .mobile-full { width: 100% !important; }
+  .mobile-hide { display: none !important; }
+  /* Tighter spacing on mobile */
+  .MuiCardContent-root { padding: 16px !important; }
+  .MuiCardContent-root:last-child { padding-bottom: 16px !important; }
+}
+
+@media (max-width: 900px) {
+  .tablet-hide { display: none !important; }
 }

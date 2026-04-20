@@ -12,17 +12,20 @@ import {
   FormControl,
   InputLabel,
   MenuItem,
-  Paper,
-  Select,
   Stack,
   TextField,
+  Tooltip,
   Typography,
 } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 import PlaylistAddIcon from "@mui/icons-material/PlaylistAdd";
 import SchoolIcon from "@mui/icons-material/School";
 import ToggleOnIcon from "@mui/icons-material/ToggleOn";
 import ToggleOffIcon from "@mui/icons-material/ToggleOff";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
+import TuneIcon from "@mui/icons-material/Tune";
+import { Select } from "@mui/material";
 
 import { adminApi } from "@/lib/adminApi";
 import { defaultProgrammes } from "@/components/forms/shared";
@@ -173,63 +176,70 @@ export default function AdminProgrammeBranchesPage() {
   };
 
   return (
-    <Stack spacing={3}>
-      <Box>
-        <Typography variant="h4" fontWeight={700} gutterBottom>
-          Programme Branch Manager
-        </Typography>
-        <Typography color="text.secondary">
-          Add custom branches or activate/deactivate built-in branches from one place.
+    <Box sx={{ pb: 6, maxWidth: 1000, mx: "auto" }}>
+      {/* Page header */}
+      <Box sx={{ mb: 4 }}>
+        <Stack direction="row" spacing={1.5} alignItems="center" mb={0.5}>
+          <TuneIcon color="primary" />
+          <Typography variant="h4" fontWeight={800} color="text.primary" letterSpacing="-0.02em">
+            Programme Branch Manager
+          </Typography>
+        </Stack>
+        <Typography variant="body1" color="text.secondary">
+          Add custom branches or activate/deactivate built-in branches for eligibility forms
         </Typography>
       </Box>
 
-      <Paper sx={{ p: 1.5 }}>
-        <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
-          <Button
-            variant={view === "custom" ? "contained" : "outlined"}
-            onClick={() => setView("custom")}
-          >
-            Custom Branches ({customCount})
-          </Button>
-          <Button
-            variant={view === "existing" ? "contained" : "outlined"}
-            onClick={() => setView("existing")}
-          >
-            Existing Branches
-          </Button>
-        </Stack>
-      </Paper>
+      {error && <Alert severity="error" onClose={() => setError(null)} sx={{ mb: 3, borderRadius: 2 }}>{error}</Alert>}
+      {success && <Alert severity="success" onClose={() => setSuccess(null)} sx={{ mb: 3, borderRadius: 2 }}>{success}</Alert>}
 
-      {error && (
-        <Alert severity="error" onClose={() => setError(null)}>
-          {error}
-        </Alert>
-      )}
-
-      {success && (
-        <Alert severity="success" onClose={() => setSuccess(null)}>
-          {success}
-        </Alert>
-      )}
+      {/* Tab switcher */}
+      <Card elevation={0} sx={{ border: "1px solid #e2e8f0", borderRadius: 3, mb: 3 }}>
+        <CardContent sx={{ p: 1.5, "&:last-child": { pb: 1.5 } }}>
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
+            <Button
+              fullWidth
+              variant={view === "custom" ? "contained" : "outlined"}
+              onClick={() => setView("custom")}
+              startIcon={<AddCircleOutlineIcon />}
+              sx={{ borderRadius: 2, fontWeight: 700, py: 1.25 }}
+            >
+              Custom Branches
+              <Chip label={customCount} size="small" sx={{ ml: 1, height: 20, fontWeight: 800, bgcolor: view === "custom" ? "rgba(255,255,255,0.25)" : undefined }} />
+            </Button>
+            <Button
+              fullWidth
+              variant={view === "existing" ? "contained" : "outlined"}
+              onClick={() => setView("existing")}
+              startIcon={<SchoolIcon />}
+              sx={{ borderRadius: 2, fontWeight: 700, py: 1.25 }}
+            >
+              Existing Branches
+              <Chip label={existingCount} size="small" sx={{ ml: 1, height: 20, fontWeight: 800, bgcolor: view === "existing" ? "rgba(255,255,255,0.25)" : undefined }} />
+            </Button>
+          </Stack>
+        </CardContent>
+      </Card>
 
       {view === "custom" ? (
-        <Paper sx={{ p: 3 }}>
-          <Stack spacing={2}>
-            <Stack direction="row" justifyContent="space-between" alignItems="center">
-              <Typography variant="h6" fontWeight={600}>
-                Custom Branches
-              </Typography>
-              <Chip color="primary" label={`${customCount} custom branches`} />
-            </Stack>
-
-            <Stack spacing={2}>
-              <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
+        <Stack spacing={3}>
+          {/* Add branch form */}
+          <Card elevation={0} sx={{ border: "1px solid #e2e8f0", borderRadius: 3 }}>
+            <Box sx={{ px: 3, py: 2.5, borderBottom: "1px solid #f1f5f9", bgcolor: "#f8fafc", borderTopLeftRadius: 12, borderTopRightRadius: 12 }}>
+              <Stack direction="row" spacing={1} alignItems="center">
+                <PlaylistAddIcon color="primary" fontSize="small" />
+                <Typography variant="subtitle1" fontWeight={700}>Add Custom Branch</Typography>
+              </Stack>
+            </Box>
+            <CardContent sx={{ p: 3 }}>
+              <Stack direction={{ xs: "column", md: "row" }} spacing={2} alignItems={{ md: "flex-end" }}>
                 <FormControl fullWidth>
-                  <InputLabel>Select Course</InputLabel>
+                  <InputLabel>Select Programme</InputLabel>
                   <Select
                     value={selectedProgramme}
-                    label="Select Course"
+                    label="Select Programme"
                     onChange={(e) => setSelectedProgramme(String(e.target.value))}
+                    sx={{ borderRadius: 2 }}
                   >
                     {programmeOptions.map((programme) => (
                       <MenuItem key={programme} value={programme}>
@@ -241,128 +251,144 @@ export default function AdminProgrammeBranchesPage() {
 
                 <TextField
                   fullWidth
-                  label="Custom Branch Name"
+                  label="Branch Name"
                   placeholder="e.g., Artificial Intelligence and Data Science"
                   value={branchName}
                   onChange={(e) => setBranchName(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && void handleAddBranch()}
+                  sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
                 />
-              </Stack>
 
-              <Box>
                 <Button
                   variant="contained"
                   startIcon={<PlaylistAddIcon />}
                   onClick={handleAddBranch}
                   disabled={saving}
+                  sx={{ borderRadius: 2, px: 4, fontWeight: 700, height: 56, whiteSpace: "nowrap" }}
                 >
-                  {saving ? "Adding..." : "Add Branch"}
+                  {saving ? "Adding…" : "Add Branch"}
                 </Button>
-              </Box>
-            </Stack>
+              </Stack>
+            </CardContent>
+          </Card>
 
+          {/* Custom branches list */}
+          <Box>
             {loading ? (
-              <Typography color="text.secondary">Loading catalogue...</Typography>
+              <Typography color="text.secondary" sx={{ py: 3 }}>Loading catalogue…</Typography>
             ) : customGroups.length === 0 ? (
-              <Typography color="text.secondary">No custom branches added yet.</Typography>
+              <Card elevation={0} sx={{ border: "1px dashed #e2e8f0", borderRadius: 3 }}>
+                <CardContent sx={{ textAlign: "center", py: 6 }}>
+                  <PlaylistAddIcon sx={{ fontSize: 48, color: "text.disabled", mb: 2 }} />
+                  <Typography color="text.secondary" fontWeight={600}>No custom branches yet</Typography>
+                  <Typography variant="body2" color="text.disabled" mt={0.5}>
+                    Use the form above to add your first custom branch.
+                  </Typography>
+                </CardContent>
+              </Card>
             ) : (
               <Stack spacing={2}>
                 {customGroups.map((group) => (
-                  <Card key={group.programme} variant="outlined">
-                    <CardContent>
-                      <Stack spacing={1.5}>
-                        <Stack direction="row" alignItems="center" spacing={1}>
-                          <SchoolIcon color="primary" fontSize="small" />
-                          <Typography fontWeight={600}>{group.programme}</Typography>
-                        </Stack>
-                        <Stack direction="row" flexWrap="wrap" gap={1}>
-                          {(Array.isArray(group.branches) ? group.branches : []).map((branch) => (
-                            <Chip
-                              key={`${group.programme}-${branch.id}`}
-                              label={branch.branch_name}
-                              size="small"
-                              color={branch.is_active ? "success" : "default"}
-                              variant={branch.is_active ? "filled" : "outlined"}
-                              onDelete={() =>
-                                handleDeleteCustomBranch(
-                                  branch.id,
-                                  `${group.programme} - ${branch.branch_name}`
-                                )
-                              }
-                              deleteIcon={<DeleteOutlineIcon fontSize="small" />}
-                            />
-                          ))}
-                        </Stack>
+                  <Card key={group.programme} elevation={0} sx={{ border: "1px solid #e2e8f0", borderRadius: 3 }}>
+                    <CardContent sx={{ p: 3 }}>
+                      <Stack direction="row" alignItems="center" spacing={1} mb={2}>
+                        <SchoolIcon color="primary" fontSize="small" />
+                        <Typography fontWeight={700}>{group.programme}</Typography>
+                        <Chip label={`${(Array.isArray(group.branches) ? group.branches : []).length} branches`} size="small" color="primary" variant="outlined" sx={{ fontWeight: 600 }} />
+                      </Stack>
+                      <Stack direction="row" flexWrap="wrap" gap={1}>
+                        {(Array.isArray(group.branches) ? group.branches : []).map((branch) => (
+                          <Chip
+                            key={`${group.programme}-${branch.id}`}
+                            label={branch.branch_name}
+                            size="small"
+                            color={branch.is_active ? "success" : "default"}
+                            variant={branch.is_active ? "filled" : "outlined"}
+                            onDelete={() =>
+                              handleDeleteCustomBranch(
+                                branch.id,
+                                `${group.programme} - ${branch.branch_name}`
+                              )
+                            }
+                            deleteIcon={
+                              <Tooltip title="Delete branch">
+                                <DeleteOutlineIcon fontSize="small" />
+                              </Tooltip>
+                            }
+                            sx={{ fontWeight: 600 }}
+                          />
+                        ))}
                       </Stack>
                     </CardContent>
                   </Card>
                 ))}
               </Stack>
             )}
-          </Stack>
-        </Paper>
+          </Box>
+        </Stack>
       ) : (
-        <Paper sx={{ p: 3 }}>
-          <Stack spacing={2}>
-            <Stack direction="row" justifyContent="space-between" alignItems="center">
-              <Typography variant="h6" fontWeight={600}>
-                Existing Branches
-              </Typography>
-              <Chip color="secondary" label="Existing branch states" />
-            </Stack>
+        <Stack spacing={2}>
+          {loading ? (
+            <Typography color="text.secondary" sx={{ py: 3 }}>Loading branch states…</Typography>
+          ) : (
+            defaultProgrammes.map((programme) => {
+              const matchedGroup = existingGroups.find(
+                (group) => group.programme === programme.programme
+              );
+              const stateMap = new Map(
+                (Array.isArray(matchedGroup?.branches) ? matchedGroup?.branches : []).map((branch) => [branch.branch_name, branch.is_active])
+              );
 
-            {loading ? (
-              <Typography color="text.secondary">Loading branch states...</Typography>
-            ) : (
-              <Stack spacing={2}>
-                {defaultProgrammes.map((programme) => {
-                  const matchedGroup = existingGroups.find(
-                    (group) => group.programme === programme.programme
-                  );
-                  const stateMap = new Map(
-                    (Array.isArray(matchedGroup?.branches) ? matchedGroup?.branches : []).map((branch) => [branch.branch_name, branch.is_active])
-                  );
+              return (
+                <Card key={programme.programme} elevation={0} sx={{ border: "1px solid #e2e8f0", borderRadius: 3 }}>
+                  <Box sx={{ px: 3, py: 2, borderBottom: "1px solid #f1f5f9", bgcolor: "#f8fafc", borderTopLeftRadius: 12, borderTopRightRadius: 12 }}>
+                    <Stack direction="row" alignItems="center" spacing={1}>
+                      <SchoolIcon color="secondary" fontSize="small" />
+                      <Typography fontWeight={700}>{programme.programme}</Typography>
+                      <Chip
+                        label={`${programme.branches.filter((b) => (stateMap.get(b.branch) ?? true)).length} active`}
+                        size="small"
+                        color="success"
+                        variant="outlined"
+                        sx={{ fontWeight: 600 }}
+                      />
+                    </Stack>
+                  </Box>
+                  <CardContent sx={{ p: 3 }}>
+                    <Stack direction="row" flexWrap="wrap" gap={1}>
+                      {programme.branches.map((branch) => {
+                        const isActive = stateMap.get(branch.branch) ?? true;
 
-                  return (
-                    <Card key={programme.programme} variant="outlined">
-                      <CardContent>
-                        <Stack spacing={1.5}>
-                          <Stack direction="row" alignItems="center" spacing={1}>
-                            <SchoolIcon color="secondary" fontSize="small" />
-                            <Typography fontWeight={600}>{programme.programme}</Typography>
-                          </Stack>
-                          <Stack direction="row" flexWrap="wrap" gap={1}>
-                            {programme.branches.map((branch) => {
-                              const isActive = stateMap.get(branch.branch) ?? true;
-
-                              return (
-                                <Chip
-                                  key={`${programme.programme}-${branch.branch}`}
-                                  label={`${branch.branch} (${isActive ? "Active" : "Inactive"})`}
-                                  color={isActive ? "success" : "default"}
-                                  variant={isActive ? "filled" : "outlined"}
-                                  icon={isActive ? <ToggleOnIcon /> : <ToggleOffIcon />}
-                                  onClick={() =>
-                                    handleToggleExistingBranch(
-                                      programme.programme,
-                                      branch.branch,
-                                      !isActive
-                                    )
-                                  }
-                                  sx={{ cursor: "pointer" }}
-                                />
-                              );
-                            })}
-                          </Stack>
-                        </Stack>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </Stack>
-            )}
-          </Stack>
-        </Paper>
+                        return (
+                          <Tooltip
+                            key={`${programme.programme}-${branch.branch}`}
+                            title={isActive ? "Click to deactivate" : "Click to activate"}
+                          >
+                            <Chip
+                              label={branch.branch}
+                              color={isActive ? "success" : "default"}
+                              variant={isActive ? "filled" : "outlined"}
+                              icon={isActive ? <ToggleOnIcon /> : <ToggleOffIcon />}
+                              onClick={() =>
+                                handleToggleExistingBranch(
+                                  programme.programme,
+                                  branch.branch,
+                                  !isActive
+                                )
+                              }
+                              sx={{ cursor: "pointer", fontWeight: 600, transition: "all 0.2s", "&:hover": { opacity: 0.8 } }}
+                            />
+                          </Tooltip>
+                        );
+                      })}
+                    </Stack>
+                  </CardContent>
+                </Card>
+              );
+            })
+          )}
+        </Stack>
       )}
-    </Stack>
+    </Box>
   );
 }

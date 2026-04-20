@@ -1,9 +1,11 @@
-"use client";
+﻿"use client";
 
 import {
   Box,
+  Card,
+  CardContent,
+  Chip,
   InputAdornment,
-  Paper,
   Stack,
   Table,
   TableBody,
@@ -18,6 +20,7 @@ import {
   Switch,
   Divider,
   alpha,
+  Grid2,
 } from "@mui/material";
 import CurrencySelector, { Currency, getCurrencySymbol } from "./CurrencySelector";
 
@@ -116,259 +119,286 @@ export default function SalaryGrid({
 
   return (
     <Box>
-      {/* Currency and Global Toggle */}
-      <Paper
+      {/* Currency & toggle bar */}
+      <Box
         sx={{
-          p: 2,
+          p: 2.5,
           mb: 3,
-          background: (theme) => alpha(theme.palette.primary.main, 0.05),
           border: "1px solid",
           borderColor: "primary.light",
+          borderRadius: 2.5,
+          bgcolor: alpha("#1a3a5c", 0.03),
         }}
       >
-        <Stack direction={{ xs: "column", md: "row" }} spacing={3} alignItems={{ md: "center" }}>
-          <CurrencySelector value={currency} onChange={onCurrencyChange} />
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={2.5} alignItems={{ sm: "center" }} justifyContent="space-between">
+          <Stack direction="row" spacing={2} alignItems="center">
+            <Typography variant="subtitle2" fontWeight={700} color="text.secondary">
+              Currency
+            </Typography>
+            <CurrencySelector value={currency} onChange={onCurrencyChange} />
+          </Stack>
           <FormControlLabel
             control={
               <Switch
                 checked={sameForAll}
                 onChange={(e) => onSameForAllChange(e.target.checked)}
                 color="primary"
+                size="small"
               />
             }
             label={
-              <Typography variant="body2" fontWeight={500}>
-                Same salary structure for all programmes
+              <Typography variant="body2" fontWeight={600} color="text.secondary">
+                Same structure for all programmes
               </Typography>
             }
           />
         </Stack>
-      </Paper>
+      </Box>
 
-      {/* Programme-wise Salary Grid */}
-      <Typography variant="subtitle2" fontWeight={600} mb={2}>
-        Programme-wise Compensation ({symbol})
-      </Typography>
-      <TableContainer component={Paper} sx={{ mb: 3 }}>
-        <Table size="small">
-          <TableHead>
-            <TableRow sx={{ bgcolor: "grey.100" }}>
-              <TableCell padding="checkbox" />
-              <TableCell sx={{ fontWeight: 600, minWidth: 180 }}>Programme</TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>CTC (Annual)</TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>Base/Fixed</TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>Monthly Take-home</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {salaries.map((salary, index) => (
-              <TableRow
-                key={salary.programme}
-                sx={{
-                  bgcolor: salary.enabled ? alpha("#1976d2", 0.04) : "transparent",
-                  opacity: salary.enabled ? 1 : 0.6,
-                }}
-              >
-                <TableCell padding="checkbox">
-                  <Checkbox
-                    checked={salary.enabled}
-                    onChange={(e) => updateSalary(index, "enabled", e.target.checked)}
-                    size="small"
-                  />
+      {/* Programme salary table */}
+      <Box sx={{ mb: 1.5 }}>
+        <Stack direction="row" alignItems="center" justifyContent="space-between" mb={1.5}>
+          <Typography variant="subtitle2" fontWeight={700} color="text.secondary">
+            Programme-wise Compensation ({symbol})
+          </Typography>
+          <Typography variant="caption" color="text.disabled">
+            Check to enable a programme
+          </Typography>
+        </Stack>
+      </Box>
+      <Card elevation={0} sx={{ border: "1px solid #e2e8f0", borderRadius: 2.5, mb: 3, overflow: "hidden" }}>
+        <TableContainer sx={{ overflowX: "auto" }}>
+          <Table size="small">
+            <TableHead>
+              <TableRow sx={{ bgcolor: "#f8fafc" }}>
+                <TableCell padding="checkbox" sx={{ borderBottom: "2px solid #e2e8f0" }} />
+                <TableCell sx={{ fontWeight: 700, color: "text.secondary", fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.06em", borderBottom: "2px solid #e2e8f0", minWidth: 180, whiteSpace: "nowrap" }}>
+                  Programme
                 </TableCell>
-                <TableCell>
-                  <Typography variant="body2" fontWeight={salary.enabled ? 500 : 400}>
-                    {salary.programme}
-                  </Typography>
+                <TableCell sx={{ fontWeight: 700, color: "text.secondary", fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.06em", borderBottom: "2px solid #e2e8f0", whiteSpace: "nowrap" }}>
+                  CTC Annual
                 </TableCell>
-                <TableCell>
-                  <TextField
-                    size="small"
-                    type="number"
-                    value={salary.ctcAnnual}
-                    onChange={(e) => updateSalary(index, "ctcAnnual", e.target.value)}
-                    disabled={!salary.enabled || (sameForAll && index > 0)}
-                    InputProps={{
-                      startAdornment: <InputAdornment position="start">{symbol}</InputAdornment>,
-                    }}
-                    sx={{ width: 150 }}
-                    placeholder="e.g. 1200000"
-                  />
+                <TableCell sx={{ fontWeight: 700, color: "text.secondary", fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.06em", borderBottom: "2px solid #e2e8f0", whiteSpace: "nowrap" }}>
+                  Base / Fixed
                 </TableCell>
-                <TableCell>
-                  <TextField
-                    size="small"
-                    type="number"
-                    value={salary.baseSalary}
-                    onChange={(e) => updateSalary(index, "baseSalary", e.target.value)}
-                    disabled={!salary.enabled || (sameForAll && index > 0)}
-                    InputProps={{
-                      startAdornment: <InputAdornment position="start">{symbol}</InputAdornment>,
-                    }}
-                    sx={{ width: 150 }}
-                    placeholder="e.g. 800000"
-                  />
-                </TableCell>
-                <TableCell>
-                  <TextField
-                    size="small"
-                    type="number"
-                    value={salary.takeHome}
-                    onChange={(e) => updateSalary(index, "takeHome", e.target.value)}
-                    disabled={!salary.enabled || (sameForAll && index > 0)}
-                    InputProps={{
-                      startAdornment: <InputAdornment position="start">{symbol}</InputAdornment>,
-                    }}
-                    sx={{ width: 150 }}
-                    placeholder="e.g. 65000"
-                  />
+                <TableCell sx={{ fontWeight: 700, color: "text.secondary", fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.06em", borderBottom: "2px solid #e2e8f0", whiteSpace: "nowrap" }}>
+                  Monthly Take-home
                 </TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+            </TableHead>
+            <TableBody>
+              {salaries.map((salary, index) => (
+                <TableRow
+                  key={salary.programme}
+                  sx={{
+                    bgcolor: salary.enabled ? alpha("#1a3a5c", 0.03) : "transparent",
+                    opacity: salary.enabled ? 1 : 0.5,
+                    "&:last-child td": { border: 0 },
+                    transition: "opacity 0.15s",
+                  }}
+                >
+                  <TableCell padding="checkbox">
+                    <Checkbox
+                      checked={salary.enabled}
+                      onChange={(e) => updateSalary(index, "enabled", e.target.checked)}
+                      size="small"
+                      color="primary"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2" fontWeight={salary.enabled ? 700 : 400} color={salary.enabled ? "text.primary" : "text.disabled"}>
+                      {salary.programme}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <TextField
+                      size="small"
+                      type="number"
+                      value={salary.ctcAnnual}
+                      onChange={(e) => updateSalary(index, "ctcAnnual", e.target.value)}
+                      disabled={!salary.enabled || (sameForAll && index > 0)}
+                      InputProps={{ startAdornment: <InputAdornment position="start">{symbol}</InputAdornment> }}
+                      sx={{ width: 140, "& .MuiOutlinedInput-root": { borderRadius: 1.5 } }}
+                      placeholder="e.g. 1200000"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <TextField
+                      size="small"
+                      type="number"
+                      value={salary.baseSalary}
+                      onChange={(e) => updateSalary(index, "baseSalary", e.target.value)}
+                      disabled={!salary.enabled || (sameForAll && index > 0)}
+                      InputProps={{ startAdornment: <InputAdornment position="start">{symbol}</InputAdornment> }}
+                      sx={{ width: 140, "& .MuiOutlinedInput-root": { borderRadius: 1.5 } }}
+                      placeholder="e.g. 800000"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <TextField
+                      size="small"
+                      type="number"
+                      value={salary.takeHome}
+                      onChange={(e) => updateSalary(index, "takeHome", e.target.value)}
+                      disabled={!salary.enabled || (sameForAll && index > 0)}
+                      InputProps={{ startAdornment: <InputAdornment position="start">{symbol}</InputAdornment> }}
+                      sx={{ width: 140, "& .MuiOutlinedInput-root": { borderRadius: 1.5 } }}
+                      placeholder="e.g. 65000"
+                    />
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Card>
 
-      {/* Additional Salary Components */}
-      <Typography variant="subtitle2" fontWeight={600} mb={2}>
+      {/* Additional components */}
+      <Typography variant="subtitle2" fontWeight={700} color="text.secondary" mb={1.5}>
         Additional Compensation Components
       </Typography>
-      <Paper sx={{ p: 2 }}>
-        <Stack spacing={3}>
-          {/* Bonuses Row */}
-          <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-            <TextField
-              size="small"
-              label="Joining Bonus"
-              value={components.joiningBonus}
-              onChange={(e) => updateComponent("joiningBonus", e.target.value)}
-              InputProps={{
-                startAdornment: <InputAdornment position="start">{symbol}</InputAdornment>,
-              }}
-              sx={{ flex: 1 }}
-            />
-            <TextField
-              size="small"
-              label="Retention Bonus"
-              value={components.retentionBonus}
-              onChange={(e) => updateComponent("retentionBonus", e.target.value)}
-              InputProps={{
-                startAdornment: <InputAdornment position="start">{symbol}</InputAdornment>,
-              }}
-              sx={{ flex: 1 }}
-            />
-            <TextField
-              size="small"
-              label="Performance/Variable Bonus"
-              value={components.performanceBonus}
-              onChange={(e) => updateComponent("performanceBonus", e.target.value)}
-              InputProps={{
-                startAdornment: <InputAdornment position="start">{symbol}</InputAdornment>,
-              }}
-              sx={{ flex: 1 }}
-            />
+      <Card elevation={0} sx={{ border: "1px solid #e2e8f0", borderRadius: 2.5 }}>
+        <CardContent sx={{ p: 3 }}>
+          <Stack spacing={3}>
+            {/* Bonuses */}
+            <Box>
+              <Typography variant="overline" color="text.disabled" fontWeight={700} letterSpacing="0.1em" mb={1.5} display="block">
+                Bonuses
+              </Typography>
+              <Grid2 container spacing={2}>
+                <Grid2 size={{ xs: 12, sm: 4 }}>
+                  <TextField size="small" fullWidth label="Joining Bonus" value={components.joiningBonus}
+                    onChange={(e) => updateComponent("joiningBonus", e.target.value)}
+                    InputProps={{ startAdornment: <InputAdornment position="start">{symbol}</InputAdornment> }}
+                    sx={{ "& .MuiOutlinedInput-root": { borderRadius: 1.5 } }}
+                  />
+                </Grid2>
+                <Grid2 size={{ xs: 12, sm: 4 }}>
+                  <TextField size="small" fullWidth label="Retention Bonus" value={components.retentionBonus}
+                    onChange={(e) => updateComponent("retentionBonus", e.target.value)}
+                    InputProps={{ startAdornment: <InputAdornment position="start">{symbol}</InputAdornment> }}
+                    sx={{ "& .MuiOutlinedInput-root": { borderRadius: 1.5 } }}
+                  />
+                </Grid2>
+                <Grid2 size={{ xs: 12, sm: 4 }}>
+                  <TextField size="small" fullWidth label="Performance Bonus" value={components.performanceBonus}
+                    onChange={(e) => updateComponent("performanceBonus", e.target.value)}
+                    InputProps={{ startAdornment: <InputAdornment position="start">{symbol}</InputAdornment> }}
+                    sx={{ "& .MuiOutlinedInput-root": { borderRadius: 1.5 } }}
+                  />
+                </Grid2>
+              </Grid2>
+            </Box>
+
+            <Divider />
+
+            {/* Equity */}
+            <Box>
+              <Typography variant="overline" color="text.disabled" fontWeight={700} letterSpacing="0.1em" mb={1.5} display="block">
+                Equity &amp; Stock
+              </Typography>
+              <Grid2 container spacing={2}>
+                <Grid2 size={{ xs: 12, sm: 4 }}>
+                  <TextField size="small" fullWidth label="ESOPs / Stock Options" value={components.esops}
+                    onChange={(e) => updateComponent("esops", e.target.value)}
+                    helperText="No. of options or value"
+                    sx={{ "& .MuiOutlinedInput-root": { borderRadius: 1.5 } }}
+                  />
+                </Grid2>
+                <Grid2 size={{ xs: 12, sm: 4 }}>
+                  <TextField size="small" fullWidth label="Vesting Period" value={components.vestPeriod}
+                    onChange={(e) => updateComponent("vestPeriod", e.target.value)}
+                    helperText="e.g., 4 yrs with 1-yr cliff"
+                    sx={{ "& .MuiOutlinedInput-root": { borderRadius: 1.5 } }}
+                  />
+                </Grid2>
+                <Grid2 size={{ xs: 12, sm: 4 }}>
+                  <TextField size="small" fullWidth label="Stocks / RSUs" value={components.stocks}
+                    onChange={(e) => updateComponent("stocks", e.target.value)}
+                    sx={{ "& .MuiOutlinedInput-root": { borderRadius: 1.5 } }}
+                  />
+                </Grid2>
+              </Grid2>
+            </Box>
+
+            <Divider />
+
+            {/* Allowances */}
+            <Box>
+              <Typography variant="overline" color="text.disabled" fontWeight={700} letterSpacing="0.1em" mb={1.5} display="block">
+                Allowances &amp; Deductions
+              </Typography>
+              <Grid2 container spacing={2}>
+                <Grid2 size={{ xs: 12, sm: 4 }}>
+                  <TextField size="small" fullWidth label="Relocation Allowance" value={components.relocationAllowance}
+                    onChange={(e) => updateComponent("relocationAllowance", e.target.value)}
+                    InputProps={{ startAdornment: <InputAdornment position="start">{symbol}</InputAdornment> }}
+                    sx={{ "& .MuiOutlinedInput-root": { borderRadius: 1.5 } }}
+                  />
+                </Grid2>
+                <Grid2 size={{ xs: 12, sm: 4 }}>
+                  <TextField size="small" fullWidth label="Medical / Insurance" value={components.medicalAllowance}
+                    onChange={(e) => updateComponent("medicalAllowance", e.target.value)}
+                    InputProps={{ startAdornment: <InputAdornment position="start">{symbol}</InputAdornment> }}
+                    sx={{ "& .MuiOutlinedInput-root": { borderRadius: 1.5 } }}
+                  />
+                </Grid2>
+                <Grid2 size={{ xs: 12, sm: 4 }}>
+                  <TextField size="small" fullWidth label="Deductions (PF, Tax)" value={components.deductions}
+                    onChange={(e) => updateComponent("deductions", e.target.value)}
+                    sx={{ "& .MuiOutlinedInput-root": { borderRadius: 1.5 } }}
+                  />
+                </Grid2>
+              </Grid2>
+            </Box>
+
+            <Divider />
+
+            {/* Bond */}
+            <Box>
+              <Typography variant="overline" color="text.disabled" fontWeight={700} letterSpacing="0.1em" mb={1.5} display="block">
+                Bond (if applicable)
+              </Typography>
+              <Grid2 container spacing={2}>
+                <Grid2 size={{ xs: 12, sm: 4 }}>
+                  <TextField size="small" fullWidth label="Bond Amount" value={components.bondAmount}
+                    onChange={(e) => updateComponent("bondAmount", e.target.value)}
+                    InputProps={{ startAdornment: <InputAdornment position="start">{symbol}</InputAdornment> }}
+                    sx={{ "& .MuiOutlinedInput-root": { borderRadius: 1.5 } }}
+                  />
+                </Grid2>
+                <Grid2 size={{ xs: 12, sm: 4 }}>
+                  <TextField size="small" fullWidth label="Bond Duration" value={components.bondDuration}
+                    onChange={(e) => updateComponent("bondDuration", e.target.value)}
+                    helperText="e.g., 2 years"
+                    sx={{ "& .MuiOutlinedInput-root": { borderRadius: 1.5 } }}
+                  />
+                </Grid2>
+              </Grid2>
+            </Box>
+
+            <Divider />
+
+            {/* CTC Breakup */}
+            <Box>
+              <Typography variant="overline" color="text.disabled" fontWeight={700} letterSpacing="0.1em" mb={1.5} display="block">
+                Detailed CTC Breakup
+              </Typography>
+              <TextField
+                label="CTC Breakup (Optional)"
+                value={components.ctcBreakup}
+                onChange={(e) => updateComponent("ctcBreakup", e.target.value)}
+                multiline
+                rows={3}
+                fullWidth
+                helperText="Provide any additional salary breakup or notes"
+                sx={{ "& .MuiOutlinedInput-root": { borderRadius: 1.5 } }}
+              />
+            </Box>
           </Stack>
-
-          <Divider />
-
-          {/* ESOPs Row */}
-          <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-            <TextField
-              size="small"
-              label="ESOPs / Stock Options"
-              value={components.esops}
-              onChange={(e) => updateComponent("esops", e.target.value)}
-              helperText="Number of options or value"
-              sx={{ flex: 1 }}
-            />
-            <TextField
-              size="small"
-              label="Vesting Period"
-              value={components.vestPeriod}
-              onChange={(e) => updateComponent("vestPeriod", e.target.value)}
-              helperText="e.g., 4 years with 1-year cliff"
-              sx={{ flex: 1 }}
-            />
-            <TextField
-              size="small"
-              label="Stocks/RSUs"
-              value={components.stocks}
-              onChange={(e) => updateComponent("stocks", e.target.value)}
-              sx={{ flex: 1 }}
-            />
-          </Stack>
-
-          <Divider />
-
-          {/* Allowances Row */}
-          <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-            <TextField
-              size="small"
-              label="Relocation Allowance"
-              value={components.relocationAllowance}
-              onChange={(e) => updateComponent("relocationAllowance", e.target.value)}
-              InputProps={{
-                startAdornment: <InputAdornment position="start">{symbol}</InputAdornment>,
-              }}
-              sx={{ flex: 1 }}
-            />
-            <TextField
-              size="small"
-              label="Medical Allowance / Insurance"
-              value={components.medicalAllowance}
-              onChange={(e) => updateComponent("medicalAllowance", e.target.value)}
-              InputProps={{
-                startAdornment: <InputAdornment position="start">{symbol}</InputAdornment>,
-              }}
-              sx={{ flex: 1 }}
-            />
-            <TextField
-              size="small"
-              label="Deductions (PF, Tax, etc.)"
-              value={components.deductions}
-              onChange={(e) => updateComponent("deductions", e.target.value)}
-              sx={{ flex: 1 }}
-            />
-          </Stack>
-
-          <Divider />
-
-          {/* Bond Row */}
-          <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-            <TextField
-              size="small"
-              label="Bond Amount (if any)"
-              value={components.bondAmount}
-              onChange={(e) => updateComponent("bondAmount", e.target.value)}
-              InputProps={{
-                startAdornment: <InputAdornment position="start">{symbol}</InputAdornment>,
-              }}
-              sx={{ flex: 1 }}
-            />
-            <TextField
-              size="small"
-              label="Bond Duration"
-              value={components.bondDuration}
-              onChange={(e) => updateComponent("bondDuration", e.target.value)}
-              helperText="e.g., 2 years"
-              sx={{ flex: 1 }}
-            />
-          </Stack>
-
-          <Divider />
-
-          {/* CTC Breakup */}
-          <TextField
-            label="Detailed CTC Breakup (Optional)"
-            value={components.ctcBreakup}
-            onChange={(e) => updateComponent("ctcBreakup", e.target.value)}
-            multiline
-            rows={3}
-            helperText="Provide any additional salary breakup details"
-            fullWidth
-          />
-        </Stack>
-      </Paper>
+        </CardContent>
+      </Card>
     </Box>
   );
 }
+

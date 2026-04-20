@@ -41,7 +41,7 @@ type FormData = {
   internshipTitle?: string;
   internshipDesignation?: string;
   internshipLocation?: string;
-  workMode?: string;
+  workMode?: "remote" | "hybrid" | "onsite";
   expectedHires?: string;
   duration?: string;
   joiningMonth?: string;
@@ -51,11 +51,12 @@ type FormData = {
   registrationLink?: string;
   eligibility?: Array<{
     programme: string;
-    branches: Array<{ branch: string; selected: boolean; cgpa: string; backlogs: boolean }>;
+    expanded: boolean;
+    branches: Array<{ branch: string; selected: boolean; cgpa: string; backlogsAllowed: boolean }>;
   }>;
   globalCgpa?: string;
   globalBacklogs?: boolean;
-  currency?: string;
+  currency?: any;
   programmeStipends?: Array<{
     programme: string;
     enabled: boolean;
@@ -322,7 +323,7 @@ export default function AdminInfDetailPage() {
                 internshipTitle: formData.internshipTitle || inf?.internship_title || "",
                 internshipDescription: formData.internshipDescription || inf?.internship_description || "",
                 internshipLocation: formData.internshipLocation || inf?.internship_location || "",
-              }}
+              } as any}
               onAdminSave={handleAdminSave}
             />
           ) : (

@@ -19,7 +19,7 @@ The portal supports company onboarding, JNF/INF submission, review workflows, an
 ### 2. Sign In
 1. Open the login page.
 2. Enter company credentials.
-3. You are redirected to the company dashboard.
+3. You are redirected to the premium SaaS company dashboard.
 
 ### 3. Manage Company Profile
 1. Open Company Profile.
@@ -28,16 +28,16 @@ The portal supports company onboarding, JNF/INF submission, review workflows, an
 
 ### 4. Submit JNF
 1. Open New JNF.
-2. Fill form fields.
+2. Fill form fields using the guided multi-step wizard. Use the interactive progress pills to navigate between sections.
 3. Use autosave while drafting.
 4. Upload attachments if required.
-5. Submit when ready.
+5. Review the final generated preview and submit when ready.
 
 ### 5. Submit INF
 1. Open New INF.
-2. Fill internship details.
+2. Fill internship details using the guided multi-step wizard.
 3. Use autosave while drafting.
-4. Submit for review.
+4. Review the final generated preview and submit for review.
 
 ### 6. Track Submission Status & Request Edits
 1. Open Submissions.

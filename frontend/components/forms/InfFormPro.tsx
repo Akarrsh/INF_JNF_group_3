@@ -5,6 +5,8 @@ import {
   Alert,
   Box,
   Button,
+  ButtonBase,
+  Chip,
   CircularProgress,
   FormControl,
   FormControlLabel,
@@ -14,9 +16,8 @@ import {
   Select,
   Snackbar,
   Stack,
-  Tab,
-  Tabs,
   TextField,
+  Tooltip,
   Typography,
   alpha,
   Radio,
@@ -337,73 +338,126 @@ export default function InfFormPro({ initialData, onSaved, isAdminMode, onAdminS
   }, [activeTab, formData]);
 
   return (
-    <Box>
-      {/* Header */}
-      <Paper
-        sx={{
-          p: 2,
-          mb: 3,
-          background: (theme) =>
-            `linear-gradient(135deg, ${theme.palette.secondary.main} 0%, ${theme.palette.secondary.dark} 100%)`,
-          color: "white",
-        }}
-      >
-        <Stack direction="row" justifyContent="space-between" alignItems="center">
+    <Box sx={{ pb: 2 }}>
+      {/* Compact header */}
+      <Box sx={{ mb: 3 }}>
+        <Stack direction={{ xs: "column", sm: "row" }} justifyContent="space-between" alignItems={{ sm: "center" }} spacing={1.5}>
           <Box>
-            <Typography variant="h5" fontWeight={600}>
-              Internship Notification Form (INF)
+            <Typography variant="h5" fontWeight={800} color="text.primary" letterSpacing="-0.01em">
+              Internship Notification Form
             </Typography>
-            <Typography variant="body2" sx={{ opacity: 0.9 }}>
+            <Typography variant="body2" color="text.secondary">
               IIT (ISM) Dhanbad — Career Development Centre
             </Typography>
           </Box>
-          <Stack direction="row" spacing={1} alignItems="center">
+          <Stack direction="row" spacing={1.5} alignItems="center">
             {saving && (
               <Stack direction="row" spacing={1} alignItems="center">
-                <CircularProgress size={16} sx={{ color: "white" }} />
-                <Typography variant="caption">Saving...</Typography>
+                <CircularProgress size={14} color="secondary" />
+                <Typography variant="caption" color="text.secondary">Saving draft…</Typography>
               </Stack>
             )}
             {draftId && (
-              <Typography variant="caption" sx={{ bgcolor: alpha("#fff", 0.2), px: 1, py: 0.5, borderRadius: 1 }}>
-                Draft #{draftId}
-              </Typography>
+              <Chip
+                label={`Draft #${draftId}`}
+                size="small"
+                color="secondary"
+                variant="outlined"
+                sx={{ fontWeight: 700, fontSize: "0.72rem" }}
+              />
             )}
           </Stack>
         </Stack>
-      </Paper>
+      </Box>
 
-      {/* Tab Navigation */}
-      <Paper sx={{ mb: 3 }}>
-        <Tabs
-          value={activeTab}
-          onChange={(_, v) => setActiveTab(v)}
-          variant="scrollable"
-          scrollButtons="auto"
+      {/* Step navigation */}
+      <Paper
+        elevation={0}
+        sx={{
+          mb: 3,
+          border: "1px solid #e2e8f0",
+          borderRadius: 3,
+          overflow: "hidden",
+        }}
+      >
+        {/* Progress bar */}
+        <Box sx={{ height: 3, bgcolor: "#e2e8f0" }}>
+          <Box
+            sx={{
+              height: "100%",
+              width: `${((activeTab + 1) / tabs.length) * 100}%`,
+              bgcolor: "secondary.main",
+              transition: "width 0.35s ease",
+            }}
+          />
+        </Box>
+
+        {/* Step pills */}
+        <Box
           sx={{
-            "& .MuiTab-root": {
-              minHeight: 64,
-              textTransform: "none",
-              fontWeight: 500,
-            },
+            display: "flex",
+            overflowX: "auto",
+            scrollbarWidth: "none",
+            "&::-webkit-scrollbar": { display: "none" },
           }}
         >
-          {tabs.map((tab, idx) => (
-            <Tab
-              key={tab.label}
-              icon={tab.icon}
-              label={tab.label}
-              iconPosition="start"
-              sx={{
-                "&.Mui-selected": { bgcolor: alpha("#ff6f00", 0.08) },
-              }}
-            />
-          ))}
-        </Tabs>
+          {tabs.map((tab, idx) => {
+            const isActive = activeTab === idx;
+            const isDone = activeTab > idx;
+            return (
+              <ButtonBase
+                key={tab.label}
+                onClick={() => setActiveTab(idx)}
+                sx={{
+                  flex: "0 0 auto",
+                  px: { xs: 2, md: 3 },
+                  py: 1.75,
+                  display: "flex",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 1,
+                  borderRight: "1px solid #f1f5f9",
+                  bgcolor: isActive ? alpha("#ff6f00", 0.05) : "transparent",
+                  borderBottom: isActive ? "2px solid" : "2px solid transparent",
+                  borderBottomColor: isActive ? "secondary.main" : "transparent",
+                  transition: "all 0.2s",
+                  "&:hover": { bgcolor: alpha("#ff6f00", 0.04) },
+                  minWidth: { xs: 130, md: "auto" },
+                }}
+              >
+                <Box
+                  sx={{
+                    width: 22,
+                    height: 22,
+                    borderRadius: "50%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                    bgcolor: isDone ? "success.main" : isActive ? "secondary.main" : "#e2e8f0",
+                    color: isDone || isActive ? "white" : "text.secondary",
+                    fontSize: "0.7rem",
+                    fontWeight: 800,
+                  }}
+                >
+                  {isDone ? "✓" : idx + 1}
+                </Box>
+                <Typography
+                  variant="caption"
+                  fontWeight={isActive ? 700 : 500}
+                  color={isActive ? "secondary.main" : isDone ? "success.dark" : "text.secondary"}
+                  whiteSpace="nowrap"
+                >
+                  {tab.label}
+                </Typography>
+              </ButtonBase>
+            );
+          })}
+        </Box>
       </Paper>
 
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
+        <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }} onClose={() => setError(null)}>
           {error}
         </Alert>
       )}
@@ -559,19 +613,19 @@ export default function InfFormPro({ initialData, onSaved, isAdminMode, onAdminS
           >
             <Stack spacing={3}>
               {/* Gender Filter */}
-              <Paper sx={{ p: 2, bgcolor: "grey.50" }}>
-                <Stack direction={{ xs: "column", md: "row" }} spacing={3} alignItems={{ md: "center" }}>
-                  <Typography variant="subtitle2" fontWeight={600}>
-                    Gender Preference:
+              <Paper elevation={0} sx={{ p: 2.5, bgcolor: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 2 }}>
+                <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems={{ sm: "center" }}>
+                  <Typography variant="subtitle2" fontWeight={700} color="text.secondary" sx={{ whiteSpace: "nowrap" }}>
+                    Gender Preference
                   </Typography>
                   <RadioGroup
                     row
                     value={formData.genderFilter}
                     onChange={(e) => updateFormData("genderFilter", e.target.value as "all" | "male" | "female")}
                   >
-                    <FormControlLabel value="all" control={<Radio />} label="All Genders" />
-                    <FormControlLabel value="male" control={<Radio />} label="Male Only" />
-                    <FormControlLabel value="female" control={<Radio />} label="Female Only" />
+                    <FormControlLabel value="all" control={<Radio size="small" />} label="All Genders" />
+                    <FormControlLabel value="male" control={<Radio size="small" />} label="Male Only" />
+                    <FormControlLabel value="female" control={<Radio size="small" />} label="Female Only" />
                   </RadioGroup>
                 </Stack>
               </Paper>
@@ -691,27 +745,49 @@ export default function InfFormPro({ initialData, onSaved, isAdminMode, onAdminS
         )}
       </Box>
 
-      {/* Navigation Buttons */}
-      <Paper sx={{ p: 2, mt: 3, position: "sticky", bottom: 0, zIndex: 10 }}>
-        <Stack direction="row" justifyContent="space-between" alignItems="center">
+      {/* Sticky Navigation Footer */}
+      <Paper
+        elevation={0}
+        sx={{
+          p: { xs: 2, md: 2.5 },
+          mt: 3,
+          position: "sticky",
+          bottom: 0,
+          zIndex: 10,
+          border: "1px solid #e2e8f0",
+          borderRadius: 3,
+          bgcolor: "rgba(255,255,255,0.95)",
+          backdropFilter: "blur(8px)",
+        }}
+      >
+        <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={2}>
           <Button
             variant="outlined"
             disabled={activeTab === 0}
             onClick={() => setActiveTab((t) => t - 1)}
+            sx={{ borderRadius: 2, fontWeight: 700, px: 3 }}
           >
-            Previous
+            ← Previous
           </Button>
 
-          <Stack direction="row" spacing={2}>
+          <Typography variant="caption" color="text.secondary" sx={{ display: { xs: "none", sm: "block" } }}>
+            Step {activeTab + 1} of {tabs.length}
+          </Typography>
+
+          <Stack direction="row" spacing={1.5}>
             {!isAdminMode && (
-              <Button
-                variant="outlined"
-                startIcon={<SaveIcon />}
-                onClick={autoSave}
-                disabled={saving}
-              >
-                Save Draft
-              </Button>
+              <Tooltip title="Auto-saves every 3 seconds">
+                <Button
+                  variant="outlined"
+                  color="secondary"
+                  startIcon={saving ? <CircularProgress size={14} color="secondary" /> : <SaveIcon />}
+                  onClick={autoSave}
+                  disabled={saving}
+                  sx={{ borderRadius: 2, fontWeight: 600, display: { xs: "none", sm: "flex" } }}
+                >
+                  Save Draft
+                </Button>
+              </Tooltip>
             )}
 
             {isAdminMode ? (
@@ -721,8 +797,9 @@ export default function InfFormPro({ initialData, onSaved, isAdminMode, onAdminS
                 startIcon={submitting ? <CircularProgress size={16} color="inherit" /> : <CheckCircleIcon />}
                 onClick={handleSubmit}
                 disabled={submitting}
+                sx={{ borderRadius: 2, fontWeight: 700, px: 4 }}
               >
-                {submitting ? "Saving..." : "Save Changes"}
+                {submitting ? "Saving…" : "Save Changes"}
               </Button>
             ) : activeTab < 5 ? (
               <Button
@@ -730,18 +807,20 @@ export default function InfFormPro({ initialData, onSaved, isAdminMode, onAdminS
                 color="secondary"
                 onClick={() => setActiveTab((t) => t + 1)}
                 disabled={!canProceed}
+                sx={{ borderRadius: 2, fontWeight: 700, px: 4 }}
               >
-                Next
+                Next →
               </Button>
             ) : (
               <Button
                 variant="contained"
-                color="secondary"
+                color="success"
                 startIcon={submitting ? <CircularProgress size={16} color="inherit" /> : <SendIcon />}
                 onClick={handleSubmit}
                 disabled={submitting}
+                sx={{ borderRadius: 2, fontWeight: 700, px: 4 }}
               >
-                {submitting ? "Submitting..." : "Submit INF"}
+                {submitting ? "Submitting…" : "Submit INF"}
               </Button>
             )}
           </Stack>

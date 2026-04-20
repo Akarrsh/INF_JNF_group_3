@@ -1,22 +1,18 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useState, type ReactElement } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
   Alert,
-  Avatar,
   Box,
   Button,
   Card,
   CardContent,
   Chip,
   FormControl,
-  IconButton,
-  InputLabel,
   LinearProgress,
   MenuItem,
-  Paper,
   Select,
   SelectChangeEvent,
   Stack,
@@ -26,11 +22,8 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Tooltip,
   Typography,
-  alpha,
 } from "@mui/material";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import WorkIcon from "@mui/icons-material/Work";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
@@ -38,6 +31,7 @@ import PendingIcon from "@mui/icons-material/Pending";
 import CancelIcon from "@mui/icons-material/Cancel";
 import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
 import FilterListIcon from "@mui/icons-material/FilterList";
+import TuneIcon from "@mui/icons-material/Tune";
 import { adminApi } from "@/lib/adminApi";
 
 type JnfItem = {
@@ -49,25 +43,35 @@ type JnfItem = {
   company?: { name: string };
 };
 
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case "accepted": return "success";
-    case "submitted": return "warning";
-    case "under_review": return "info";
-    case "rejected": return "error";
-    default: return "default";
-  }
+const STATUS_CONFIG: Record<string, { color: "success" | "warning" | "info" | "error" | "default"; label: string; icon: ReactElement | null }> = {
+  accepted:     { color: "success", label: "Accepted",     icon: <CheckCircleIcon fontSize="small" /> },
+  submitted:    { color: "warning", label: "Submitted",    icon: <HourglassEmptyIcon fontSize="small" /> },
+  under_review: { color: "info",    label: "Under Review", icon: <PendingIcon fontSize="small" /> },
+  rejected:     { color: "error",   label: "Rejected",     icon: <CancelIcon fontSize="small" /> },
+  draft:        { color: "default", label: "Draft",        icon: null },
 };
 
-const getStatusIcon = (status: string) => {
-  switch (status) {
-    case "accepted": return <CheckCircleIcon fontSize="small" />;
-    case "submitted": return <HourglassEmptyIcon fontSize="small" />;
-    case "under_review": return <PendingIcon fontSize="small" />;
-    case "rejected": return <CancelIcon fontSize="small" />;
-    default: return null;
-  }
+const StatusChip = ({ status }: { status: string }) => {
+  const cfg = STATUS_CONFIG[status] ?? { color: "default" as const, label: status, icon: null };
+  return (
+    <Chip
+      icon={cfg.icon ?? undefined}
+      label={cfg.label}
+      size="small"
+      color={cfg.color}
+      sx={{ fontWeight: 700, fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.04em" }}
+    />
+  );
 };
+
+const FILTER_OPTIONS = [
+  { value: "pending", label: "Pending Queue", desc: "submitted + under review" },
+  { value: "submitted", label: "Submitted" },
+  { value: "under_review", label: "Under Review" },
+  { value: "accepted", label: "Accepted" },
+  { value: "rejected", label: "Rejected" },
+  { value: "draft", label: "Drafts" },
+];
 
 function JnfQueueContent() {
   const searchParams = useSearchParams();
@@ -101,147 +105,146 @@ function JnfQueueContent() {
     setStatus(event.target.value);
   };
 
+  const currentFilter = FILTER_OPTIONS.find((f) => f.value === status);
+
   return (
-    <Box>
-      {/* Header */}
-      <Paper
-        sx={{
-          p: 2,
-          mb: 3,
-          background: (theme) =>
-            `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
-          color: "white",
-          borderRadius: 2,
-        }}
-      >
-        <Stack direction={{ xs: "column", md: "row" }} justifyContent="space-between" alignItems={{ md: "center" }} spacing={2}>
-          <Stack direction="row" spacing={2} alignItems="center">
-            <Avatar sx={{ width: 48, height: 48, bgcolor: "white", color: "primary.main" }}>
-              <WorkIcon />
-            </Avatar>
-            <Box>
-              <Typography variant="h5" fontWeight={700}>
-                JNF Review Queue
-              </Typography>
-              <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                Review and manage Job Notification Forms
-              </Typography>
-            </Box>
-          </Stack>
-          <Button
-            component={Link}
-            href="/admin"
-            variant="outlined"
-            startIcon={<ArrowBackIcon />}
-            sx={{ color: "white", borderColor: "white", "&:hover": { borderColor: "white", bgcolor: alpha("#fff", 0.1) } }}
-          >
-            Back to Dashboard
-          </Button>
+    <Box sx={{ pb: 6, maxWidth: 1200, mx: "auto" }}>
+      {/* Page header */}
+      <Box sx={{ mb: 4 }}>
+        <Stack direction="row" alignItems="center" spacing={1.5} mb={0.5}>
+          <WorkIcon color="primary" />
+          <Typography variant="h4" fontWeight={800} color="text.primary" letterSpacing="-0.02em">
+            JNF Review Queue
+          </Typography>
         </Stack>
-      </Paper>
+        <Typography variant="body1" color="text.secondary">
+          Review, approve, and manage Job Notification Form submissions
+        </Typography>
+      </Box>
 
-      {/* Filter */}
-      <Paper sx={{ p: 2, mb: 3 }}>
-        <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems={{ sm: "center" }}>
-          <Stack direction="row" spacing={1} alignItems="center">
-            <FilterListIcon color="primary" />
-            <Typography variant="subtitle2">Filter by Status:</Typography>
+      {error && <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>{error}</Alert>}
+
+      {/* Filter bar */}
+      <Card elevation={0} sx={{ border: "1px solid #e2e8f0", borderRadius: 3, mb: 3 }}>
+        <CardContent sx={{ p: 2.5, "&:last-child": { pb: 2.5 } }}>
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems={{ sm: "center" }} justifyContent="space-between">
+            <Stack direction="row" spacing={1.5} alignItems="center">
+              <TuneIcon color="primary" fontSize="small" />
+              <Typography variant="subtitle2" fontWeight={700} color="text.secondary">
+                Filter by Status
+              </Typography>
+              <FormControl size="small" sx={{ minWidth: 220 }}>
+                <Select value={status} onChange={handleStatusChange} displayEmpty sx={{ borderRadius: 2 }}>
+                  {FILTER_OPTIONS.map((opt) => (
+                    <MenuItem key={opt.value} value={opt.value}>
+                      {opt.label}{opt.desc ? <Box component="span" sx={{ color: "text.secondary", ml: 1, fontSize: "0.8em" }}>({opt.desc})</Box> : null}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Stack>
+            <Stack direction="row" spacing={1} alignItems="center">
+              <Chip
+                label={loading ? "Loading…" : `${jnfs.length} result${jnfs.length !== 1 ? "s" : ""}`}
+                color="primary"
+                variant="outlined"
+                sx={{ fontWeight: 700 }}
+              />
+              <Button component={Link} href="/admin" size="small" variant="outlined" sx={{ borderRadius: 2, fontWeight: 600 }}>
+                Dashboard
+              </Button>
+            </Stack>
           </Stack>
-          <FormControl size="small" sx={{ minWidth: 250 }}>
-            <Select value={status} onChange={handleStatusChange} displayEmpty>
-              <MenuItem value="pending">📋 Pending Queue (submitted + under_review)</MenuItem>
-              <MenuItem value="submitted">⏳ Submitted</MenuItem>
-              <MenuItem value="under_review">🔍 Under Review</MenuItem>
-              <MenuItem value="accepted">✅ Accepted</MenuItem>
-              <MenuItem value="rejected">❌ Rejected</MenuItem>
-              <MenuItem value="draft">📝 Draft</MenuItem>
-            </Select>
-          </FormControl>
-          <Chip label={`${jnfs.length} results`} color="primary" variant="outlined" />
-        </Stack>
-      </Paper>
+        </CardContent>
+      </Card>
 
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-
+      {/* Table */}
       {loading ? (
-        <Box sx={{ py: 4 }}>
-          <LinearProgress />
-          <Typography textAlign="center" mt={2}>Loading JNFs...</Typography>
+        <Box sx={{ py: 6 }}>
+          <LinearProgress sx={{ borderRadius: 1, mb: 3 }} />
+          <Typography textAlign="center" color="text.secondary">Loading JNFs…</Typography>
         </Box>
       ) : (
-        <Card>
-          <CardContent>
-            {jnfs.length === 0 ? (
-              <Box textAlign="center" py={4}>
-                <Typography color="text.secondary" mb={2}>
-                  No JNF submissions found for the selected filter.
-                </Typography>
-              </Box>
-            ) : (
-              <TableContainer>
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Job Title</TableCell>
-                      <TableCell>Company</TableCell>
-                      <TableCell>Status</TableCell>
-                      <TableCell>Submitted</TableCell>
-                      <TableCell>Last Updated</TableCell>
-                      <TableCell align="right">Action</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {jnfs.map((jnf) => (
-                      <TableRow key={jnf.id} hover>
-                        <TableCell>
-                          <Typography variant="body2" fontWeight={500}>
-                            {jnf.job_title}
-                          </Typography>
-                        </TableCell>
-                        <TableCell>
-                          <Typography variant="body2" color="text.secondary">
-                            {jnf.company?.name ?? "-"}
-                          </Typography>
-                        </TableCell>
-                        <TableCell>
-                          <Chip
-                            icon={getStatusIcon(jnf.status) || undefined}
-                            label={jnf.status.replace("_", " ")}
-                            size="small"
-                            color={getStatusColor(jnf.status) as "success" | "warning" | "info" | "error" | "default"}
-                            variant="outlined"
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Typography variant="caption" color="text.secondary">
-                            {jnf.created_at ? new Date(jnf.created_at).toLocaleDateString() : "-"}
-                          </Typography>
-                        </TableCell>
-                        <TableCell>
-                          <Typography variant="caption" color="text.secondary">
-                            {new Date(jnf.updated_at).toLocaleDateString()}
-                          </Typography>
-                        </TableCell>
-                        <TableCell align="right">
-                          <Tooltip title="Review JNF">
-                            <Button
-                              component={Link}
-                              href={`/admin/jnfs/${jnf.id}`}
-                              size="small"
-                              variant="contained"
-                              startIcon={<VisibilityIcon />}
-                            >
-                              Review
-                            </Button>
-                          </Tooltip>
-                        </TableCell>
-                      </TableRow>
+        <Card elevation={0} sx={{ border: "1px solid #e2e8f0", borderRadius: 3 }}>
+          {jnfs.length === 0 ? (
+            <CardContent sx={{ textAlign: "center", py: 8 }}>
+              <WorkIcon sx={{ fontSize: 56, color: "text.disabled", mb: 2 }} />
+              <Typography variant="h6" color="text.secondary" fontWeight={600}>
+                No JNFs found
+              </Typography>
+              <Typography variant="body2" color="text.disabled" mt={1}>
+                No submissions match the selected filter: <strong>{currentFilter?.label}</strong>
+              </Typography>
+            </CardContent>
+          ) : (
+            <TableContainer sx={{ overflowX: "auto" }}>
+              <Table>
+                <TableHead>
+                  <TableRow sx={{ bgcolor: "#f8fafc" }}>
+                    {["Job Title", "Company", "Status", "Submitted", "Last Updated", ""].map((h) => (
+                      <TableCell
+                        key={h}
+                        align={h === "" ? "right" : "left"}
+                        sx={{
+                          fontWeight: 700,
+                          color: "text.secondary",
+                          fontSize: "0.72rem",
+                          textTransform: "uppercase",
+                          letterSpacing: "0.06em",
+                          py: 1.75,
+                          borderBottom: "2px solid #e2e8f0",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {h}
+                      </TableCell>
                     ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            )}
-          </CardContent>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {jnfs.map((jnf) => (
+                    <TableRow key={jnf.id} hover sx={{ "&:last-child td": { border: 0 }, cursor: "pointer" }}>
+                      <TableCell sx={{ py: 2 }}>
+                        <Typography variant="body2" fontWeight={700} sx={{ maxWidth: 200 }}>
+                          {jnf.job_title}
+                        </Typography>
+                      </TableCell>
+                      <TableCell sx={{ py: 2 }}>
+                        <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 160 }} noWrap>
+                          {jnf.company?.name ?? "—"}
+                        </Typography>
+                      </TableCell>
+                      <TableCell sx={{ py: 2 }}>
+                        <StatusChip status={jnf.status} />
+                      </TableCell>
+                      <TableCell sx={{ py: 2 }}>
+                        <Typography variant="caption" color="text.secondary" fontWeight={500}>
+                          {jnf.created_at ? new Date(jnf.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—"}
+                        </Typography>
+                      </TableCell>
+                      <TableCell sx={{ py: 2 }}>
+                        <Typography variant="caption" color="text.secondary" fontWeight={500}>
+                          {new Date(jnf.updated_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
+                        </Typography>
+                      </TableCell>
+                      <TableCell align="right" sx={{ py: 2 }}>
+                        <Button
+                          component={Link}
+                          href={`/admin/jnfs/${jnf.id}`}
+                          size="small"
+                          variant="contained"
+                          startIcon={<VisibilityIcon />}
+                          sx={{ borderRadius: 1.5, fontWeight: 700, whiteSpace: "nowrap" }}
+                        >
+                          Review
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
         </Card>
       )}
     </Box>
@@ -251,9 +254,9 @@ function JnfQueueContent() {
 export default function AdminJnfQueuePage() {
   return (
     <Suspense fallback={
-      <Box sx={{ py: 4 }}>
-        <LinearProgress />
-        <Typography textAlign="center" mt={2}>Loading...</Typography>
+      <Box sx={{ py: 6 }}>
+        <LinearProgress sx={{ borderRadius: 1, mb: 3 }} />
+        <Typography textAlign="center" color="text.secondary">Loading…</Typography>
       </Box>
     }>
       <JnfQueueContent />

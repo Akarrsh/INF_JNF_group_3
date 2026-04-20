@@ -5,11 +5,10 @@ import {
   Box,
   Card,
   CardContent,
-  Divider,
   Stack,
   Typography,
-  alpha,
 } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 
 interface FormSectionProps {
   title: string;
@@ -17,6 +16,7 @@ interface FormSectionProps {
   icon?: ReactNode;
   children: ReactNode;
   required?: boolean;
+  accentColor?: string;
 }
 
 export default function FormSection({
@@ -25,58 +25,70 @@ export default function FormSection({
   icon,
   children,
   required,
+  accentColor,
 }: FormSectionProps) {
   return (
     <Card
+      elevation={0}
       sx={{
         mb: 3,
-        border: "1px solid",
-        borderColor: "divider",
-        boxShadow: (theme) => `0 2px 8px ${alpha(theme.palette.primary.main, 0.08)}`,
+        border: "1px solid #e2e8f0",
+        borderRadius: 3,
+        overflow: "hidden",
       }}
     >
+      {/* Section header */}
       <Box
         sx={{
-          px: 3,
-          py: 2,
-          background: (theme) =>
-            `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.05)} 0%, ${alpha(theme.palette.primary.main, 0.02)} 100%)`,
-          borderBottom: "1px solid",
-          borderColor: "divider",
+          px: { xs: 2.5, md: 3.5 },
+          py: 2.5,
+          bgcolor: "#f8fafc",
+          borderBottom: "1px solid #e2e8f0",
         }}
       >
         <Stack direction="row" alignItems="center" spacing={1.5}>
           {icon && (
             <Box
               sx={{
-                color: "primary.main",
+                width: 36,
+                height: 36,
+                borderRadius: 2,
+                bgcolor: accentColor ? alpha(accentColor, 0.12) : alpha("#1a3a5c", 0.1),
+                color: accentColor ?? "primary.main",
                 display: "flex",
                 alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+                "& svg": { fontSize: "1.2rem" },
               }}
             >
               {icon}
             </Box>
           )}
-          <Box>
-            <Stack direction="row" alignItems="center" spacing={1}>
-              <Typography variant="h6" fontWeight={600}>
+          <Box sx={{ flex: 1 }}>
+            <Stack direction="row" alignItems="center" spacing={0.75}>
+              <Typography variant="subtitle1" fontWeight={700} color="text.primary">
                 {title}
               </Typography>
               {required && (
-                <Typography color="error" component="span" fontWeight={500}>
+                <Typography color="error.main" component="span" fontWeight={700} fontSize="1rem" lineHeight={1}>
                   *
                 </Typography>
               )}
             </Stack>
             {subtitle && (
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" color="text.secondary" mt={0.25}>
                 {subtitle}
               </Typography>
             )}
           </Box>
         </Stack>
       </Box>
-      <CardContent sx={{ p: 3 }}>{children}</CardContent>
+
+      {/* Section body */}
+      <CardContent sx={{ p: { xs: 2.5, md: 3.5 }, "&:last-child": { pb: { xs: 2.5, md: 3.5 } } }}>
+        {children}
+      </CardContent>
     </Card>
   );
 }

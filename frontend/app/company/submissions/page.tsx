@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   Alert,
+  Box,
   Button,
   Card,
   CardContent,
@@ -17,7 +18,9 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 import { companyApi } from "@/lib/companyApi";
+import EmptyState from "@/components/ui/EmptyState";
 
 type JnfItem = {
   id: number;
@@ -111,80 +114,94 @@ export default function SubmissionsPage() {
     }
   };
 
-  return (
-    <Stack spacing={2.5}>
-      <Typography variant="h4" color="primary.main">
-        My Submissions
-      </Typography>
-      {error && <Alert severity="error">{error}</Alert>}
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "accepted": return "success";
+      case "submitted": case "under_review": return "info";
+      case "rejected": return "error";
+      case "draft": return "default";
+      default: return "default";
+    }
+  };
 
-      <Grid2 container spacing={2}>
+  return (
+    <Box sx={{ pb: 6, maxWidth: 1200, mx: "auto" }}>
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h4" sx={{ fontWeight: 800, color: "text.primary", mb: 0.5, letterSpacing: "-0.02em" }}>
+          My Submissions
+        </Typography>
+        <Typography variant="body1" sx={{ color: "text.secondary" }}>
+          Track and manage your Job and Internship Notification Forms.
+        </Typography>
+      </Box>
+
+      {error && <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>{error}</Alert>}
+
+      <Grid2 container spacing={4}>
         {/* JNF List */}
         <Grid2 size={{ xs: 12, md: 6 }}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                JNF Submissions
+          <Card elevation={0} sx={{ border: "1px solid #e2e8f0", borderRadius: 3, overflow: "visible", height: "100%" }}>
+            <Box sx={{ borderBottom: "1px solid #e2e8f0", px: 3, py: 2, bgcolor: "#f8fafc", borderTopLeftRadius: 12, borderTopRightRadius: 12 }}>
+              <Typography variant="h6" fontWeight={700} color="primary.main">
+                Job Notification Forms (JNF)
               </Typography>
-              <Stack spacing={1}>
+            </Box>
+            <CardContent sx={{ p: 0, "&:last-child": { pb: 0 } }}>
+              <Stack divider={<Box sx={{ borderBottom: "1px solid #f1f5f9" }} />}>
                 {jnfs.map((item) => {
                   const action = getEditAction(item.status, item.has_edited_once);
                   return (
-                    <Stack
-                      key={item.id}
-                      direction="row"
-                      justifyContent="space-between"
-                      alignItems="center"
-                    >
-                      <Typography variant="body2">
-                        {item.job_title}{" "}
-                        <Typography component="span" variant="caption" color="text.secondary">
-                          ({item.status.replace(/_/g, " ")})
-                        </Typography>
-                      </Typography>
-                      <Stack direction="row" spacing={1}>
-                        <Button
-                          component={Link}
-                          href={`/company/jnf/${item.id}`}
-                          size="small"
-                        >
-                          View
-                        </Button>
-                        {action === "edit" && (
-                          <Button
-                            component={Link}
-                            href={`/company/jnf/${item.id}/edit`}
-                            size="small"
-                            variant="outlined"
-                          >
-                            Edit
+                    <Box key={item.id} sx={{ p: 3, transition: "background-color 0.2s", "&:hover": { bgcolor: "#f8fafc" } }}>
+                      <Stack direction={{ xs: "column", sm: "row" }} justifyContent="space-between" alignItems={{ xs: "flex-start", sm: "center" }} spacing={2}>
+                        <Box>
+                          <Typography variant="subtitle1" fontWeight={700} color="text.primary" mb={0.5}>
+                            {item.job_title}
+                          </Typography>
+                          <Stack direction="row" spacing={1.5} alignItems="center">
+                            <Box sx={{
+                              px: 1, py: 0.25, borderRadius: 1, fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em",
+                              bgcolor: `var(--mui-palette-${getStatusColor(item.status)}-light)`,
+                              color: `var(--mui-palette-${getStatusColor(item.status)}-dark)`,
+                              border: "1px solid", borderColor: `var(--mui-palette-${getStatusColor(item.status)}-main)`
+                            }}>
+                              {item.status.replace(/_/g, " ")}
+                            </Box>
+                            <Typography variant="caption" color="text.secondary" fontWeight={500}>
+                              Updated {new Date(item.updated_at).toLocaleDateString()}
+                            </Typography>
+                          </Stack>
+                        </Box>
+
+                        <Stack direction="row" spacing={1}>
+                          <Button component={Link} href={`/company/jnf/${item.id}`} size="small" variant="text" sx={{ fontWeight: 600 }}>
+                            View
                           </Button>
-                        )}
-                        {action === "request" && (
-                          <Button
-                            size="small"
-                            color="warning"
-                            variant="outlined"
-                            onClick={() =>
-                              openModal({ type: "jnf", id: item.id, title: item.job_title })
-                            }
-                          >
-                            Request Edit
-                          </Button>
-                        )}
-                        {action === "pending" && (
-                          <Button size="small" disabled>
-                            Edit Requested
-                          </Button>
-                        )}
+                          {action === "edit" && (
+                            <Button component={Link} href={`/company/jnf/${item.id}/edit`} size="small" variant="outlined" sx={{ borderRadius: 1.5, fontWeight: 600 }}>
+                              Edit
+                            </Button>
+                          )}
+                          {action === "request" && (
+                            <Button size="small" color="warning" variant="outlined" sx={{ borderRadius: 1.5, fontWeight: 600 }} onClick={() => openModal({ type: "jnf", id: item.id, title: item.job_title })}>
+                              Request Edit
+                            </Button>
+                          )}
+                          {action === "pending" && (
+                            <Button size="small" disabled variant="outlined" sx={{ borderRadius: 1.5, fontWeight: 600 }}>
+                              Pending
+                            </Button>
+                          )}
+                        </Stack>
                       </Stack>
-                    </Stack>
+                    </Box>
                   );
                 })}
                 {jnfs.length === 0 && (
-                  <Typography variant="body2" color="text.secondary">
-                    No JNFs submitted yet.
-                  </Typography>
+                  <EmptyState
+                    variant="default"
+                    title="No JNFs submitted yet"
+                    description="Submit a Job Notification Form to get started with campus recruitment."
+                  />
                 )}
               </Stack>
             </CardContent>
@@ -193,70 +210,68 @@ export default function SubmissionsPage() {
 
         {/* INF List */}
         <Grid2 size={{ xs: 12, md: 6 }}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                INF Submissions
+          <Card elevation={0} sx={{ border: "1px solid #e2e8f0", borderRadius: 3, overflow: "visible", height: "100%" }}>
+            <Box sx={{ borderBottom: "1px solid #e2e8f0", px: 3, py: 2, bgcolor: "#f8fafc", borderTopLeftRadius: 12, borderTopRightRadius: 12 }}>
+              <Typography variant="h6" fontWeight={700} color="secondary.main">
+                Internship Notification Forms (INF)
               </Typography>
-              <Stack spacing={1}>
+            </Box>
+            <CardContent sx={{ p: 0, "&:last-child": { pb: 0 } }}>
+              <Stack divider={<Box sx={{ borderBottom: "1px solid #f1f5f9" }} />}>
                 {infs.map((item) => {
                   const action = getEditAction(item.status, item.has_edited_once);
                   return (
-                    <Stack
-                      key={item.id}
-                      direction="row"
-                      justifyContent="space-between"
-                      alignItems="center"
-                    >
-                      <Typography variant="body2">
-                        {item.internship_title}{" "}
-                        <Typography component="span" variant="caption" color="text.secondary">
-                          ({item.status.replace(/_/g, " ")})
-                        </Typography>
-                      </Typography>
-                      <Stack direction="row" spacing={1}>
-                        <Button
-                          component={Link}
-                          href={`/company/inf/${item.id}`}
-                          size="small"
-                        >
-                          View
-                        </Button>
-                        {action === "edit" && (
-                          <Button
-                            component={Link}
-                            href={`/company/inf/${item.id}/edit`}
-                            size="small"
-                            variant="outlined"
-                          >
-                            Edit
+                    <Box key={item.id} sx={{ p: 3, transition: "background-color 0.2s", "&:hover": { bgcolor: "#f8fafc" } }}>
+                      <Stack direction={{ xs: "column", sm: "row" }} justifyContent="space-between" alignItems={{ xs: "flex-start", sm: "center" }} spacing={2}>
+                        <Box>
+                          <Typography variant="subtitle1" fontWeight={700} color="text.primary" mb={0.5}>
+                            {item.internship_title}
+                          </Typography>
+                          <Stack direction="row" spacing={1.5} alignItems="center">
+                            <Box sx={{
+                              px: 1, py: 0.25, borderRadius: 1, fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em",
+                              bgcolor: `var(--mui-palette-${getStatusColor(item.status)}-light)`,
+                              color: `var(--mui-palette-${getStatusColor(item.status)}-dark)`,
+                              border: "1px solid", borderColor: `var(--mui-palette-${getStatusColor(item.status)}-main)`
+                            }}>
+                              {item.status.replace(/_/g, " ")}
+                            </Box>
+                            <Typography variant="caption" color="text.secondary" fontWeight={500}>
+                              Updated {new Date(item.updated_at).toLocaleDateString()}
+                            </Typography>
+                          </Stack>
+                        </Box>
+
+                        <Stack direction="row" spacing={1}>
+                          <Button component={Link} href={`/company/inf/${item.id}`} size="small" color="secondary" variant="text" sx={{ fontWeight: 600 }}>
+                            View
                           </Button>
-                        )}
-                        {action === "request" && (
-                          <Button
-                            size="small"
-                            color="warning"
-                            variant="outlined"
-                            onClick={() =>
-                              openModal({ type: "inf", id: item.id, title: item.internship_title })
-                            }
-                          >
-                            Request Edit
-                          </Button>
-                        )}
-                        {action === "pending" && (
-                          <Button size="small" disabled>
-                            Edit Requested
-                          </Button>
-                        )}
+                          {action === "edit" && (
+                            <Button component={Link} href={`/company/inf/${item.id}/edit`} size="small" color="secondary" variant="outlined" sx={{ borderRadius: 1.5, fontWeight: 600 }}>
+                              Edit
+                            </Button>
+                          )}
+                          {action === "request" && (
+                            <Button size="small" color="warning" variant="outlined" sx={{ borderRadius: 1.5, fontWeight: 600 }} onClick={() => openModal({ type: "inf", id: item.id, title: item.internship_title })}>
+                              Request Edit
+                            </Button>
+                          )}
+                          {action === "pending" && (
+                            <Button size="small" disabled variant="outlined" sx={{ borderRadius: 1.5, fontWeight: 600 }}>
+                              Pending
+                            </Button>
+                          )}
+                        </Stack>
                       </Stack>
-                    </Stack>
+                    </Box>
                   );
                 })}
                 {infs.length === 0 && (
-                  <Typography variant="body2" color="text.secondary">
-                    No INFs submitted yet.
-                  </Typography>
+                  <EmptyState
+                    variant="default"
+                    title="No INFs submitted yet"
+                    description="Submit an Internship Notification Form to begin your internship drive."
+                  />
                 )}
               </Stack>
             </CardContent>
@@ -265,14 +280,13 @@ export default function SubmissionsPage() {
       </Grid2>
 
       {/* Request Edit Modal */}
-      <Dialog open={!!modalTarget} onClose={() => setModalTarget(null)} maxWidth="sm" fullWidth>
-        <DialogTitle>Request to Edit — {modalTarget?.title}</DialogTitle>
+      <Dialog open={!!modalTarget} onClose={() => setModalTarget(null)} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
+        <DialogTitle sx={{ fontWeight: 700 }}>Request Edit Access</DialogTitle>
         <DialogContent>
-          <DialogContentText sx={{ mb: 2 }}>
-            Your form has already been submitted. Please provide a reason. The CDC admin will
-            review and approve or reject your request.
+          <DialogContentText sx={{ mb: 3 }}>
+            You are requesting to edit <strong>{modalTarget?.title}</strong>. Please provide a clear reason. The CDC admin will review and approve or reject your request.
           </DialogContentText>
-          <Stack spacing={2}>
+          <Stack spacing={2.5}>
             <TextField
               label="Reason for Edit *"
               value={reason}
@@ -282,6 +296,7 @@ export default function SubmissionsPage() {
               fullWidth
               multiline
               rows={3}
+              sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
             />
             <TextField
               label="Additional Comments (Optional)"
@@ -290,22 +305,19 @@ export default function SubmissionsPage() {
               fullWidth
               multiline
               rows={2}
+              sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
             />
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setModalTarget(null)} disabled={submitting}>
+          <Button onClick={() => setModalTarget(null)} disabled={submitting} color="inherit" sx={{ fontWeight: 600, borderRadius: 2 }}>
             Cancel
           </Button>
-          <Button
-            onClick={() => void handleSubmitRequest()}
-            variant="contained"
-            disabled={submitting}
-          >
-            {submitting ? "Submitting..." : "Submit Request"}
+          <Button onClick={() => void handleSubmitRequest()} variant="contained" disabled={submitting} sx={{ borderRadius: 2, px: 3, fontWeight: 700, minWidth: 140 }}>
+            {submitting ? "Submitting…" : "Submit Request"}
           </Button>
         </DialogActions>
       </Dialog>
-    </Stack>
+    </Box>
   );
 }
